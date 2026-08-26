@@ -8,6 +8,7 @@ import { Setup } from "./components/Setup";
 import { PlayView } from "./components/PlayView";
 import { useGuitar } from "./hooks/useGuitar";
 import { loadHighScores } from "./data/songs";
+import { getTuning, loadTuningId, saveTuningId, type Tuning } from "./engine/tuning";
 import type { Page } from "./types";
 
 function pageFromHash(): Page {
@@ -31,7 +32,13 @@ export function App() {
   const [page, setPage] = useState<Page>(() => pageFromHash());
   const [scores, setScores] = useState(() => loadHighScores());
   const [latencyMs, setLatencyMs] = useState(40);
+  const [tuning, setTuningState] = useState<Tuning>(() => getTuning(loadTuningId()));
   const guitar = useGuitar();
+
+  const setTuning = (next: Tuning) => {
+    setTuningState(next);
+    saveTuningId(next.id);
+  };
 
   useEffect(() => {
     const onHash = () => setPage(pageFromHash());
@@ -55,15 +62,25 @@ export function App() {
           detected={guitar.detected}
           guitarLive={guitar.live}
           latencyMs={latencyMs}
+          tuning={tuning}
+          onTuning={setTuning}
           onBack={() => navigate({ name: "songs" })}
           onConnect={() => navigate({ name: "setup" })}
         />
       );
     }
-    if (page.name === "songs") return <Songs onPlay={play} scores={scores} />;
+    if (page.name === "songs") return <Songs onPlay={play} scores={scores} tuning={tuning} onTuning={setTuning} />;
     if (page.name === "learn") return <Learn onPlay={play} scores={scores} />;
     if (page.name === "tuner") {
-      return <Tuner detected={guitar.detected} status={guitar.status} onConnect={() => void guitar.connect(guitar.deviceId)} />;
+      return (
+        <Tuner
+          detected={guitar.detected}
+          status={guitar.status}
+          tuning={tuning}
+          onTuning={setTuning}
+          onConnect={() => void guitar.connect(guitar.deviceId)}
+        />
+      );
     }
     if (page.name === "setup") {
       return (
@@ -75,6 +92,8 @@ export function App() {
           channel={guitar.channel}
           capture={guitar.capture}
           detected={guitar.detected}
+          tuning={tuning}
+          onTuning={setTuning}
           onConnect={(id) => void guitar.connect(id)}
           onDisconnect={() => void guitar.disconnect()}
           onRefresh={guitar.refreshDevices}
@@ -88,9 +107,11 @@ export function App() {
         onSetup={() => navigate({ name: "setup" })}
         guitarStatus={guitar.status}
         scores={scores}
+        tuning={tuning}
+        onTuning={setTuning}
       />
     );
-  }, [page, guitar, scores, latencyMs]);
+  }, [page, guitar, scores, latencyMs, tuning]);
 
   if (page.name === "play") {
     return body;
@@ -98,7 +119,7 @@ export function App() {
 
   return (
     <div className="shell">
-      <Sidebar page={page} onNavigate={navigate} guitarStatus={guitar.status} />
+      <Sidebar page={page} onNavigate={navigate} guitarStatus={guitar.status} tuning={tuning} />
       <main className="main">
         {body}
         {page.name === "setup" && (

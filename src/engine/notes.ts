@@ -1,9 +1,21 @@
 import type { StringIndex } from "../types";
+import { STANDARD_TUNING, type Tuning } from "./tuning";
 
-export const STRING_NAMES = ["", "e", "B", "G", "D", "A", "E"] as const;
+export type { Tuning } from "./tuning";
+export {
+  STANDARD_TUNING,
+  DROP_D_TUNING,
+  TUNINGS,
+  getTuning,
+  songForTuning,
+  loadTuningId,
+  saveTuningId,
+} from "./tuning";
+
+export const STRING_NAMES = STANDARD_TUNING.stringNames;
 
 /** Open-string MIDI numbers. Index is guitar string 1 (high e) through 6 (low E). */
-export const OPEN_MIDI = [0, 64, 59, 55, 50, 45, 40] as const;
+export const OPEN_MIDI = STANDARD_TUNING.openMidi;
 
 export const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"] as const;
 
@@ -17,8 +29,8 @@ export const STRING_COLORS = [
   "#f87171",
 ] as const;
 
-export function noteMidi(string: StringIndex, fret: number): number {
-  return OPEN_MIDI[string] + fret;
+export function noteMidi(string: StringIndex, fret: number, tuning: Tuning = STANDARD_TUNING): number {
+  return tuning.openMidi[string] + fret;
 }
 
 export function midiToFreq(midi: number): number {
@@ -50,11 +62,14 @@ export function pitchMatches(expectedMidi: number, detectedMidi: number, centsTo
   );
 }
 
-export function bestPositionForMidi(midi: number): { string: StringIndex; fret: number } | null {
+export function bestPositionForMidi(
+  midi: number,
+  tuning: Tuning = STANDARD_TUNING,
+): { string: StringIndex; fret: number } | null {
   const target = Math.round(midi);
   let best: { string: StringIndex; fret: number } | null = null;
   for (let s = 1; s <= 6; s++) {
-    const fret = target - OPEN_MIDI[s];
+    const fret = target - tuning.openMidi[s];
     if (fret < 0 || fret > 15) continue;
     if (!best || fret < best.fret) {
       best = { string: s as StringIndex, fret };

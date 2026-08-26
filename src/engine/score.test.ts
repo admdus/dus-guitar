@@ -1,5 +1,6 @@
 import { comboMultiplier, hitAccuracy, judgeTiming, pointsFor } from "./score";
 import { midiToFreq, midiToName, noteMidi, pitchMatches, starsForAccuracy } from "./notes";
+import { DROP_D_TUNING } from "./tuning";
 
 describe("timing windows", () => {
   it("judges perfect / great / good / miss", () => {
@@ -35,6 +36,12 @@ describe("guitar notes", () => {
     expect(midiToName(40)).toBe("E2");
     expect(midiToName(45)).toBe("A2");
     expect(Math.abs(midiToFreq(69) - 440)).toBeLessThan(0.001);
+  });
+
+  it("maps Drop D open D and the same E two frets up", () => {
+    expect(noteMidi(6, 0, DROP_D_TUNING)).toBe(38);
+    expect(noteMidi(6, 2, DROP_D_TUNING)).toBe(40);
+    expect(midiToName(38)).toBe("D2");
   });
 
   it("matches pitch including octave errors", () => {

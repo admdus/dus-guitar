@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { drawFretboard } from "./FretboardCanvas";
 import { NeckBoard } from "./NeckBoard";
 import { IconBack, Stars } from "./Icons";
+import { TuningPicker } from "./TuningPicker";
 import { SongEngine } from "../engine/playback";
 import { getSong, saveHighScore } from "../data/songs";
 import { bestPositionForMidi } from "../engine/notes";
+import { songForTuning, type Tuning } from "../engine/tuning";
 import { click, pluckFret, resumeAudio } from "../audio/synth";
 import { guitarInput } from "../audio/guitarInput";
 import type { DetectedPitch, EngineSnapshot, StringIndex } from "../types";
@@ -14,12 +16,27 @@ interface Props {
   detected: DetectedPitch | null;
   guitarLive: boolean;
   latencyMs: number;
+  tuning: Tuning;
+  onTuning: (tuning: Tuning) => void;
   onBack: () => void;
   onConnect: () => void;
 }
 
-export function PlayView({ songId, detected, guitarLive, latencyMs, onBack, onConnect }: Props) {
-  const song = getSong(songId);
+export function PlayView({
+  songId,
+  detected,
+  guitarLive,
+  latencyMs,
+  tuning,
+  onTuning,
+  onBack,
+  onConnect,
+}: Props) {
+  const catalogSong = getSong(songId);
+  const song = useMemo(
+    () => (catalogSong ? songForTuning(catalogSong, tuning) : undefined),
+    [catalogSong, tuning],
+  );
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<SongEngine | null>(null);
   const snapRef = useRef<EngineSnapshot | null>(null);
@@ -37,7 +54,7 @@ export function PlayView({ songId, detected, guitarLive, latencyMs, onBack, onCo
 
   useEffect(() => {
     if (!song) return;
-    const engine = new SongEngine(song, { latencyMs });
+    const engine = new SongEngine(song, { latencyMs, tuning });
     engineRef.current = engine;
     snapRef.current = engine.snapshot();
     setHud(engine.snapshot());
@@ -65,7 +82,7 @@ export function PlayView({ songId, detected, guitarLive, latencyMs, onBack, onCo
         const ctx = canvas.getContext("2d");
         if (ctx) {
           ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-          drawFretboard(ctx, w, h, snap, detectedRef.current, song.bpm);
+          drawFretboard(ctx, w, h, snap, detectedRef.current, song.bpm, tuning);
         }
         if (metronomeRef.current && snap.playing) {
           const beatDur = 60 / song.bpm;
@@ -90,7 +107,7 @@ export function PlayView({ songId, detected, guitarLive, latencyMs, onBack, onCo
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [songId, song, latencyMs]);
+  }, [songId, song, latencyMs, tuning]);
 
   useEffect(() => {
     engineRef.current?.setLatency(latencyMs);
@@ -114,12 +131,12 @@ export function PlayView({ songId, detected, guitarLive, latencyMs, onBack, onCo
       const pending = snap.notes.find((n) => n.status === "pending" && Math.abs(n.time - snap.currentTime) < 0.2);
       const judge = engine.feedPractice(performance.now());
       if (judge && judge !== "miss" && pending) {
-        pluckFret(pending.string, pending.fret, 0.16);
+        pluckFret(pending.string, pending.fret, 0.16, tuning);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [spaceAssist]);
+  }, [spaceAssist, tuning]);
 
   if (!song) {
     return (
@@ -149,13 +166,13 @@ export function PlayView({ songId, detected, guitarLive, latencyMs, onBack, onCo
   };
   const playFret = (string: StringIndex, fret: number) => {
     void resumeAudio();
-    pluckFret(string, fret, 0.2);
+    pluckFret(string, fret, 0.2, tuning);
     engineRef.current?.feedFret(string, fret, performance.now());
   };
 
   const snap = hud ?? engineRef.current?.snapshot();
   const accuracy = snap?.accuracy ?? 0;
-  const highlight = detected ? bestPositionForMidi(detected.midi) : null;
+  const highlight = detected ? bestPositionForMidi(detected.midi, tuning) : null;
 
   return (
     <div className="play-screen">
@@ -166,7 +183,7 @@ export function PlayView({ songId, detected, guitarLive, latencyMs, onBack, onCo
         <div className="play-title">
           <h1>{song.title}</h1>
           <p>
-            {song.artist} · {song.bpm} BPM
+            {song.artist} · {song.bpm} BPM · {tuning.name}
             {song.notes.some((n) => n.technique) ? " · h hammer-on · p pull-off" : ""}
           </p>
         </div>
@@ -218,6 +235,7 @@ export function PlayView({ songId, detected, guitarLive, latencyMs, onBack, onCo
             </button>
           ))}
         </div>
+        <TuningPicker value={tuning} onChange={onTuning} compact />
         <label className="check">
           <input type="checkbox" checked={metronome} onChange={(e) => setMetronome(e.target.checked)} />
           Click
@@ -234,7 +252,7 @@ export function PlayView({ songId, detected, guitarLive, latencyMs, onBack, onCo
         {detected && (
           <span className="heard-note">
             Heard {detected.noteName}
-            {highlight ? ` · ${["", "e", "B", "G", "D", "A", "E"][highlight.string]}${highlight.fret}` : ""}
+            {highlight ? ` · ${tuning.stringNames[highlight.string]}${highlight.fret}` : ""}
           </span>
         )}
         {snap?.notes.find((n) => n.status === "pending")?.technique === "hammer" && (
@@ -252,9 +270,17 @@ export function PlayView({ songId, detected, guitarLive, latencyMs, onBack, onCo
       <NeckBoard
         notes={snap?.notes ?? song.notes.map((n) => ({ ...n, status: "pending" }))}
         currentTime={snap?.currentTime ?? -1}
+        tuning={tuning}
         highlight={highlight}
         onPlayFret={playFret}
       />
+
+      {tuning.id === "drop-d" && (
+        <p className="practice-hint tuning-note">
+          Playing in <b>Drop D</b>. Tabs keep the same pitches — low-string notes sit 2 frets higher, so power
+          chords become one-finger shapes.
+        </p>
+      )}
 
       {!guitarLive && (
         <p className="practice-hint">

@@ -1,15 +1,19 @@
 import { useMemo, useState } from "react";
 import { SONGS } from "../data/songs";
 import { SongCard } from "./SongCard";
+import { TuningPicker } from "./TuningPicker";
+import type { Tuning } from "../engine/tuning";
 
 interface Props {
   onPlay: (id: string) => void;
   scores: Record<string, { stars: number }>;
+  tuning: Tuning;
+  onTuning: (tuning: Tuning) => void;
 }
 
 const FILTERS = ["All", "Beginner", "Rock", "Metal", "Folk", "Classical", "Exercise"] as const;
 
-export function Songs({ onPlay, scores }: Props) {
+export function Songs({ onPlay, scores, tuning, onTuning }: Props) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
 
@@ -55,6 +59,15 @@ export function Songs({ onPlay, scores }: Props) {
             {item}
           </button>
         ))}
+      </div>
+      <div className="tuning-bar">
+        <TuningPicker value={tuning} onChange={onTuning} />
+        {tuning.id === "drop-d" && (
+          <p className="tuning-hint">
+            Songs keep their concert pitches. Low-string notes move up 2 frets; power chords become one-finger
+            shapes.
+          </p>
+        )}
       </div>
       <div className="song-grid">
         {list.map((song) => (

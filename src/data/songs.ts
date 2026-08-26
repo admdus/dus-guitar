@@ -286,7 +286,7 @@ for (let bar = 0; bar < 4; bar++) {
 }
 
 // Original metalcore trainer — palm-muted E5 chugs plus G5 / C5 / D5 hits.
-// Standard tuning, two-string shapes. Not a transcription of any licensed song.
+// Written in standard; Drop D remaps string 6 up 2 frets into one-finger shapes.
 const venomVerse: BeatEvent[] = [
   ...chug(0, 8, 0.5, 6, 0, 0.45, 1),
   ...chug(4, 4, 0.5, 6, 0, 0.45, 10),
@@ -683,7 +683,7 @@ export const SONGS: Song[] = [
     genre: "Metal",
     category: "rock",
     description:
-      "Metalcore chugs in standard tuning. Palm-mute eighth-note E5, then G5, C5 and D5. Let the chorus hits ring.",
+      "Metalcore chugs. Palm-mute eighth-note E5, then G5, C5 and D5. Let the chorus hits ring. In Drop D the same riff uses one-finger power chords.",
     cover: { from: "#7f1d1d", to: "#111827", motif: "slash" },
     events: venomDriveEvents,
   }),

@@ -1,16 +1,18 @@
-import { STRING_COLORS, STRING_NAMES } from "../engine/notes";
+import { STRING_COLORS } from "../engine/notes";
+import type { Tuning } from "../engine/tuning";
 import type { LiveNote, StringIndex } from "../types";
 
 interface Props {
   notes: LiveNote[];
   currentTime: number;
+  tuning: Tuning;
   highlight?: { string: StringIndex; fret: number } | null;
   onPlayFret: (string: StringIndex, fret: number) => void;
 }
 
 const FRETS = 12;
 
-export function NeckBoard({ notes, currentTime, highlight, onPlayFret }: Props) {
+export function NeckBoard({ notes, currentTime, tuning, highlight, onPlayFret }: Props) {
   const upcoming = notes.filter((n) => n.status === "pending" && n.time >= currentTime - 0.05 && n.time <= currentTime + 1.6);
 
   return (
@@ -18,7 +20,7 @@ export function NeckBoard({ notes, currentTime, highlight, onPlayFret }: Props) 
       <div className="neck-labels">
         {([1, 2, 3, 4, 5, 6] as StringIndex[]).map((s) => (
           <span key={s} style={{ color: STRING_COLORS[s] }}>
-            {STRING_NAMES[s]}
+            {tuning.stringNames[s]}
           </span>
         ))}
       </div>
@@ -46,7 +48,7 @@ export function NeckBoard({ notes, currentTime, highlight, onPlayFret }: Props) 
                   className={`fret-cell ${isUpcoming ? "upcoming" : ""} ${isNow ? "now" : ""} ${isHeard ? "heard" : ""} ${fret === 0 ? "open" : ""} ${mark ? "legato" : ""}`}
                   style={{ ["--s" as string]: STRING_COLORS[s] }}
                   onClick={() => onPlayFret(s, fret)}
-                  aria-label={`${STRING_NAMES[s]} string fret ${fret}${match?.technique === "hammer" ? " hammer-on" : match?.technique === "pull" ? " pull-off" : ""}`}
+                  aria-label={`${tuning.stringNames[s]} string fret ${fret}${match?.technique === "hammer" ? " hammer-on" : match?.technique === "pull" ? " pull-off" : ""}`}
                 >
                   {label}
                 </button>

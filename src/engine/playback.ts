@@ -2,13 +2,16 @@ import type { EngineSnapshot, Judge, LiveNote, Song, StringIndex } from "../type
 import { noteMidi, pitchMatches, starsForAccuracy } from "./notes";
 import { hitAccuracy, JUDGE_WINDOWS, judgeTiming, pointsFor } from "./score";
 import { isLegato } from "./tab";
+import { STANDARD_TUNING, type Tuning } from "./tuning";
 
 export interface EngineOptions {
   latencyMs?: number;
+  tuning?: Tuning;
 }
 
 export class SongEngine {
   readonly song: Song;
+  readonly tuning: Tuning;
   private notes: LiveNote[];
   private playing = false;
   private finished = false;
@@ -26,6 +29,7 @@ export class SongEngine {
 
   constructor(song: Song, options: EngineOptions = {}) {
     this.song = song;
+    this.tuning = options.tuning ?? STANDARD_TUNING;
     this.latencyMs = options.latencyMs ?? 0;
     this.countInSec = (60 / song.bpm) * 4;
     this.notes = song.notes.map((note) => ({ ...note, status: "pending" }));
@@ -98,7 +102,7 @@ export class SongEngine {
     this.lastHeardMidi = midi;
     // Hammer-ons and pull-offs have no pick attack — score them on a pitch change.
     if (!onset && !pitchMoved) return null;
-    return this.tryHit((note) => pitchMatches(noteMidi(note.string, note.fret), midi), t, onset);
+    return this.tryHit((note) => pitchMatches(noteMidi(note.string, note.fret, this.tuning), midi), t, onset);
   }
 
   feedFret(string: StringIndex, fret: number, nowMs = this.nowMs()): Judge | null {

@@ -8,7 +8,7 @@ A Windows desktop app for learning guitar songs. Plug in a guitar, pick a track,
 - **Browse songs** on a dark, card-based home and library
 - **Follow the fretboard** as numbered notes scroll toward the play line in time
 - **Score timing and pitch** — Perfect / Great / Good / Miss, combo, accuracy, and stars
-- **Tune** to standard EADGBE before you play
+- **Tune** to standard EADGBE or Drop D (DADGBE) before you play
 - **Practice without a guitar** by clicking the neck diagram or using Space
 
 ## Install on Windows
@@ -35,7 +35,7 @@ npm run electron
 
 1. Plug the guitar into an audio interface (Scarlett 2i2: Input 1 + INST), or place a mic in front of an acoustic.
 2. Open **Guitar** in the sidebar and choose that input (not Loopback). Pick a string — the meter should jump and a note name should appear.
-3. Use **Tuner** so each open string is in tune (E A D G B e).
+3. Use **Tuner** so each open string is in tune. Pick **Standard** (E A D G B e) or **Drop D** (D A D G B e) to match the guitar. Drop D rewrites every song so it still sounds the same: low-string notes move up 2 frets, and power chords become one-finger shapes.
 4. Pick a song. After a 4-beat count-in, notes slide toward the cyan **PLAY** line.
 5. Fret and pick the matching note when it arrives. The bouncing ball marks the current string. Hits light up; misses fade red.
 6. The neck at the bottom shows which frets are coming up. Click it to play a note if you are practicing without a guitar.
@@ -66,7 +66,7 @@ If Windows cannot open the device, close Ableton, Reaper, or other hosts using F
 
 The library mixes original riffs (`Power Pulse`, `Pentatonic Drive`, `Blue Porch`, `Venom Drive`, `Venom Coil`, `Venom Arc`) with public-domain melodies (`Ode to Joy`, `Amazing Grace`, `The Rising Sun`). Nothing here is a licensed pop transcription.
 
-`Venom Drive` is an original metalcore chug in standard tuning — palm-muted E5, then G5, C5 and D5. `Venom Coil` is the advanced metal trainer: notes marked **h** are hammer-ons and **p** are pull-offs. Pick the first note of a slur, then hammer or pull on the same string without picking again. `Venom Arc` trains metal arpeggios: pick one note at a time through Em, C, G and D shapes, then sixteenth-note sweeps (including B diminished and a 7th-position Em).
+`Venom Drive` is an original metalcore chug — palm-muted E5, then G5, C5 and D5. Switch the app to Drop D and the same riff uses one-finger power chords. `Venom Coil` is the advanced metal trainer: notes marked **h** are hammer-ons and **p** are pull-offs. Pick the first note of a slur, then hammer or pull on the same string without picking again. `Venom Arc` trains metal arpeggios: pick one note at a time through Em, C, G and D shapes, then sixteenth-note sweeps (including B diminished and a 7th-position Em).
 
 ## Scripts
 
