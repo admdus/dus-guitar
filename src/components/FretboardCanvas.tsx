@@ -1,5 +1,6 @@
 import { STRING_COLORS, bestPositionForMidi } from "../engine/notes";
-import type { DetectedPitch, EngineSnapshot, LiveNote } from "../types";
+import { isLegato } from "../engine/tab";
+import type { DetectedPitch, EngineSnapshot, LiveNote, Technique } from "../types";
 
 const PLAYHEAD = 148;
 const PPS = 270;
@@ -51,6 +52,7 @@ export function drawFretboard(
   }
 
   drawBeatGrid(ctx, width, height, snap, bpm);
+  drawSlurs(ctx, width, height, snap.notes, snap.currentTime);
 
   ctx.save();
   const glow = ctx.createLinearGradient(PLAYHEAD - 40, 0, PLAYHEAD + 50, 0);
@@ -131,6 +133,48 @@ function drawBeatGrid(
   }
 }
 
+function drawSlurs(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  notes: LiveNote[],
+  currentTime: number,
+) {
+  for (let i = 1; i < notes.length; i++) {
+    const note = notes[i];
+    if (!isLegato(note.technique)) continue;
+    let prev: LiveNote | null = null;
+    for (let j = i - 1; j >= 0; j--) {
+      if (notes[j].string === note.string) {
+        prev = notes[j];
+        break;
+      }
+    }
+    if (!prev) continue;
+    const x0 = PLAYHEAD + (prev.time - currentTime) * PPS;
+    const x1 = PLAYHEAD + (note.time - currentTime) * PPS;
+    if (x1 < -40 || x0 > width + 40) continue;
+    const y0 = stringY(prev.string, x0, height);
+    const y1 = stringY(note.string, x1, height);
+    const midX = (x0 + x1) / 2;
+    const lift = Math.min(22, 10 + Math.abs(x1 - x0) * 0.12);
+    ctx.beginPath();
+    ctx.moveTo(x0 + 8, y0 - 10);
+    ctx.quadraticCurveTo(midX, Math.min(y0, y1) - lift, x1 - 8, y1 - 10);
+    ctx.strokeStyle =
+      note.technique === "hammer" ? "rgba(250, 204, 21, 0.85)" : "rgba(251, 113, 133, 0.85)";
+    ctx.lineWidth = 2.2;
+    ctx.setLineDash([]);
+    ctx.stroke();
+  }
+}
+
+function techniqueMark(technique?: Technique) {
+  if (technique === "hammer") return "h";
+  if (technique === "pull") return "p";
+  return "";
+}
+
 function drawNote(
   ctx: CanvasRenderingContext2D,
   width: number,
@@ -144,6 +188,7 @@ function drawNote(
   const t = Math.max(0, Math.min(1, (x - PLAYHEAD) / 900));
   const r = 16 - t * 6;
   const tail = Math.max(10, note.duration * PPS * 0.7);
+  const mark = techniqueMark(note.technique);
 
   const color =
     note.status === "perfect"
@@ -168,8 +213,8 @@ function drawNote(
   ctx.shadowBlur = x < PLAYHEAD + 40 && note.status === "pending" ? 18 : 6;
   ctx.fill();
   ctx.shadowBlur = 0;
-  ctx.strokeStyle = "rgba(8,10,16,0.45)";
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = mark ? "rgba(250, 204, 21, 0.95)" : "rgba(8,10,16,0.45)";
+  ctx.lineWidth = mark ? 2.6 : 2;
   ctx.stroke();
 
   ctx.globalAlpha = 1;
@@ -178,6 +223,17 @@ function drawNote(
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(String(note.fret), x, y + 0.5);
+
+  if (mark) {
+    const badge = Math.max(8, 11 - t * 3);
+    ctx.font = `800 ${badge}px Outfit, sans-serif`;
+    ctx.fillStyle = note.technique === "hammer" ? "#fde68a" : "#fecdd3";
+    ctx.strokeStyle = "rgba(8,10,16,0.75)";
+    ctx.lineWidth = 3;
+    ctx.strokeText(mark, x + r * 0.85, y - r * 0.7);
+    ctx.fillText(mark, x + r * 0.85, y - r * 0.7);
+  }
+
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
 }

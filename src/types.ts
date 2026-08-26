@@ -3,6 +3,7 @@ export type Difficulty = 1 | 2 | 3 | 4 | 5;
 export type SongCategory = "beginner" | "rock" | "folk" | "exercise" | "classical";
 export type Judge = "perfect" | "great" | "good" | "miss";
 export type NoteStatus = "pending" | Judge;
+export type Technique = "hammer" | "pull";
 
 export interface SongNote {
   id: number;
@@ -11,6 +12,8 @@ export interface SongNote {
   string: StringIndex;
   fret: number;
   chordGroup?: number;
+  /** Hammer-on or pull-off — scored from a pitch change, not a pick attack. */
+  technique?: Technique;
 }
 
 export interface SongCover {

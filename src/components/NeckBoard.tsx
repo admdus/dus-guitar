@@ -26,18 +26,29 @@ export function NeckBoard({ notes, currentTime, highlight, onPlayFret }: Props) 
         {([1, 2, 3, 4, 5, 6] as StringIndex[]).map((s) => (
           <div className="neck-string" key={s}>
             {Array.from({ length: FRETS + 1 }, (_, fret) => {
-              const isUpcoming = upcoming.some((n) => n.string === s && n.fret === fret);
+              const match = upcoming.find((n) => n.string === s && n.fret === fret);
+              const isUpcoming = Boolean(match);
               const isNow = upcoming.some((n) => n.string === s && n.fret === fret && Math.abs(n.time - currentTime) < 0.12);
               const isHeard = highlight?.string === s && highlight.fret === fret;
+              const mark = match?.technique === "hammer" ? "h" : match?.technique === "pull" ? "p" : "";
+              const label = isUpcoming
+                ? mark
+                  ? `${fret}${mark}`
+                  : String(fret)
+                : fret === 0
+                  ? String(fret)
+                  : [3, 5, 7, 9, 12].includes(fret)
+                    ? "•"
+                    : "";
               return (
                 <button
                   key={fret}
-                  className={`fret-cell ${isUpcoming ? "upcoming" : ""} ${isNow ? "now" : ""} ${isHeard ? "heard" : ""} ${fret === 0 ? "open" : ""}`}
+                  className={`fret-cell ${isUpcoming ? "upcoming" : ""} ${isNow ? "now" : ""} ${isHeard ? "heard" : ""} ${fret === 0 ? "open" : ""} ${mark ? "legato" : ""}`}
                   style={{ ["--s" as string]: STRING_COLORS[s] }}
                   onClick={() => onPlayFret(s, fret)}
-                  aria-label={`${STRING_NAMES[s]} string fret ${fret}`}
+                  aria-label={`${STRING_NAMES[s]} string fret ${fret}${match?.technique === "hammer" ? " hammer-on" : match?.technique === "pull" ? " pull-off" : ""}`}
                 >
-                  {isUpcoming || fret === 0 ? fret : [3, 5, 7, 9, 12].includes(fret) ? "•" : ""}
+                  {label}
                 </button>
               );
             })}

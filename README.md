@@ -64,7 +64,9 @@ If Windows cannot open the device, close Ableton, Reaper, or other hosts using F
 
 ## Songs
 
-The library mixes original riffs (`Power Pulse`, `Pentatonic Drive`, `Blue Porch`) with public-domain melodies (`Ode to Joy`, `Amazing Grace`, `The Rising Sun`). Nothing here is a licensed pop transcription.
+The library mixes original riffs (`Power Pulse`, `Pentatonic Drive`, `Blue Porch`, `Venom Drive`, `Venom Coil`) with public-domain melodies (`Ode to Joy`, `Amazing Grace`, `The Rising Sun`). Nothing here is a licensed pop transcription.
+
+`Venom Coil` is the advanced metal trainer: notes marked **h** are hammer-ons and **p** are pull-offs. Pick the first note of a slur, then hammer or pull on the same string without picking again.
 
 ## Scripts
 

@@ -398,6 +398,16 @@ h2, h3 { margin: 0; }
 .speed-toggle .on { background: #22d3ee; color: #083344; }
 .check { display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: 0.9rem; }
 .heard-note { margin-left: auto; color: #67e8f9; font-weight: 700; }
+.technique-callout {
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  padding: 6px 10px;
+  border-radius: 999px;
+}
+.technique-callout.hammer { background: rgba(250, 204, 21, 0.18); color: #fde68a; }
+.technique-callout.pull { background: rgba(251, 113, 133, 0.18); color: #fecdd3; }
 .fret-stage { flex: 1; min-height: 340px; position: relative; }
 .fret-stage canvas { display: block; width: 100%; height: 100%; }
 
@@ -433,6 +443,7 @@ h2, h3 { margin: 0; }
 .fret-cell.upcoming { background: color-mix(in srgb, var(--s) 35%, #1a140f); border-color: var(--s); }
 .fret-cell.now { background: var(--s); color: #0b0d14; box-shadow: 0 0 12px var(--s); }
 .fret-cell.heard { outline: 2px solid #fff; }
+.fret-cell.legato { letter-spacing: -0.04em; font-size: 0.72rem; }
 .practice-hint { margin: 0 18px 16px; color: var(--muted); font-size: 0.9rem; }
 
 .results-overlay {
