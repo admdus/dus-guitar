@@ -1,5 +1,5 @@
 import type { Song } from "../types";
-import { fromBeats, loopBar, songDuration, type BeatEvent } from "../engine/tab";
+import { fromBeats, legatoPhrase, loopBar, shiftBeats, songDuration, asTabEvent, type BeatEvent, type BeatTuple } from "../engine/tab";
 
 function makeSong(
   song: Omit<Song, "notes" | "duration"> & { events: BeatEvent[] },
@@ -40,14 +40,6 @@ function chug(
     out.push(...powerChord(start + i * step, rootString, fret, duration, groupStart + i));
   }
   return out;
-}
-
-function shiftBeats(events: BeatEvent[], beatOffset: number, groupOffset: number): BeatEvent[] {
-  return events.map(([beat, str, fret, duration, group]) => {
-    const next: BeatEvent = [beat + beatOffset, str, fret, duration];
-    if (group !== undefined) next[4] = group + groupOffset;
-    return next;
-  });
 }
 
 const sparkEvents: BeatEvent[] = [
@@ -106,8 +98,10 @@ const powerPulseEvents: BeatEvent[] = [
 ];
 
 const powerPulseLooped = loopBar(4, 8, powerPulseEvents).map((e, i) => {
-  const copy: BeatEvent = [...e];
-  if (copy[4] !== undefined) copy[4] = copy[4]! + Math.floor(i / powerPulseEvents.length) * 10;
+  const copy = asTabEvent(e);
+  if (copy.chordGroup !== undefined) {
+    copy.chordGroup = copy.chordGroup + Math.floor(i / powerPulseEvents.length) * 10;
+  }
   return copy;
 });
 
@@ -216,7 +210,7 @@ const pentatonicEvents = loopBar(4, 8, [
 ]);
 
 const risingEvents: BeatEvent[] = [];
-const risingChords: Array<[BeatEvent[], number]> = [
+const risingChords: Array<[BeatTuple[], number]> = [
   // Am
   [[[0, 5, 0, 0.45], [0.5, 4, 2, 0.45], [1, 3, 2, 0.45], [1.5, 2, 1, 0.45]], 0],
   // C
@@ -273,7 +267,7 @@ const bluesEvents = loopBar(3, 16, [
 ]);
 
 const campfireEvents: BeatEvent[] = [];
-const campfireChords: Array<[number, BeatEvent[]]> = [
+const campfireChords: Array<[number, BeatTuple[]]> = [
   [0, [[0, 6, 3, 0.8, 1], [0, 5, 2, 0.8, 1], [0, 4, 0, 0.8, 1]]], // G
   [1, [[0, 6, 3, 0.8, 2], [0, 5, 2, 0.8, 2], [0, 4, 0, 0.8, 2]]],
   [2, [[0, 5, 3, 0.8, 3], [0, 4, 2, 0.8, 3], [0, 3, 0, 0.8, 3]]], // C
@@ -318,6 +312,167 @@ const venomDriveEvents: BeatEvent[] = [
   ...venomVerse,
   ...shiftBeats(venomVerse, 16, 100),
   ...shiftBeats(venomChorus, 32, 200),
+];
+
+// Advanced original metal trainer — hammer-ons and pull-offs in E minor.
+// Pick the first note of each slur, then hammer (h) or pull (p) without picking.
+const venomCoilHammers: BeatEvent[] = [
+  ...legatoPhrase(0, 6, [
+    [0, 0.5],
+    [2, 0.5],
+  ]),
+  ...legatoPhrase(1, 6, [
+    [0, 0.5],
+    [3, 0.5],
+  ]),
+  ...legatoPhrase(2, 6, [
+    [0, 0.5],
+    [2, 0.5],
+  ]),
+  [3, 6, 3, 0.5],
+  [3.5, 6, 0, 0.5],
+  ...legatoPhrase(4, 6, [
+    [0, 0.5],
+    [3, 0.5],
+  ]),
+  ...legatoPhrase(5, 6, [
+    [0, 0.5],
+    [2, 0.5],
+  ]),
+  ...legatoPhrase(6, 6, [
+    [0, 0.5],
+    [3, 0.5],
+  ]),
+  [7, 6, 0, 1],
+];
+
+const venomCoilPulls: BeatEvent[] = [
+  ...legatoPhrase(0, 6, [
+    [0, 0.25],
+    [2, 0.25],
+    [0, 0.5],
+    [0, 0.25],
+    [3, 0.25],
+    [0, 0.5],
+    [0, 0.25],
+    [2, 0.25],
+    [0, 0.5],
+    [3, 0.5],
+    [0, 0.5],
+  ]),
+  ...legatoPhrase(4, 6, [
+    [0, 0.25],
+    [2, 0.25],
+    [3, 0.25],
+    [2, 0.25],
+    [0, 0.5],
+    [0, 0.25],
+    [3, 0.25],
+    [5, 0.25],
+    [3, 0.25],
+    [0, 0.5],
+    [0, 1],
+  ]),
+];
+
+const venomCoilStrings: BeatEvent[] = [
+  ...legatoPhrase(0, 5, [
+    [0, 0.25],
+    [2, 0.25],
+    [0, 0.5],
+    [0, 0.25],
+    [3, 0.25],
+    [0, 0.5],
+    [0, 0.25],
+    [2, 0.25],
+    [3, 0.25],
+    [2, 0.25],
+    [0, 1],
+  ]),
+  ...legatoPhrase(4, 4, [
+    [0, 0.25],
+    [2, 0.25],
+    [0, 0.5],
+  ]),
+  ...legatoPhrase(5, 3, [
+    [0, 0.25],
+    [2, 0.25],
+    [0, 0.5],
+  ]),
+  ...legatoPhrase(6, 4, [
+    [2, 0.25],
+    [4, 0.25],
+    [2, 0.5],
+  ]),
+  ...legatoPhrase(7, 3, [
+    [2, 0.25],
+    [4, 0.25],
+    [2, 0.5],
+  ]),
+];
+
+const venomCoilGallop: BeatEvent[] = [
+  [0, 6, 0, 0.5],
+  [0.5, 6, 0, 0.25],
+  { beat: 0.75, string: 6, fret: 2, duration: 0.25, technique: "hammer" },
+  [1, 6, 0, 0.5],
+  [1.5, 6, 0, 0.25],
+  { beat: 1.75, string: 6, fret: 3, duration: 0.25, technique: "hammer" },
+  [2, 6, 0, 0.5],
+  [2.5, 6, 0, 0.25],
+  { beat: 2.75, string: 6, fret: 2, duration: 0.25, technique: "hammer" },
+  [3, 6, 0, 0.5],
+  [3.5, 6, 0, 0.25],
+  { beat: 3.75, string: 6, fret: 3, duration: 0.25, technique: "hammer" },
+  ...legatoPhrase(4, 6, [
+    [0, 0.25],
+    [2, 0.25],
+    [0, 0.5],
+    [0, 0.25],
+    [3, 0.25],
+    [0, 0.5],
+    [0, 0.25],
+    [2, 0.25],
+    [3, 0.25],
+    [2, 0.25],
+    [0, 1],
+  ]),
+];
+
+const venomCoilFinale: BeatEvent[] = [
+  ...legatoPhrase(0, 6, [
+    [0, 0.25],
+    [2, 0.25],
+    [3, 0.25],
+    [5, 0.25],
+    [3, 0.25],
+    [2, 0.25],
+    [0, 0.5],
+  ]),
+  ...legatoPhrase(2, 5, [
+    [0, 0.25],
+    [2, 0.25],
+    [3, 0.25],
+    [2, 0.25],
+    [0, 1],
+  ]),
+  ...legatoPhrase(4, 6, [
+    [0, 0.25],
+    [3, 0.25],
+    [0, 0.25],
+    [5, 0.25],
+    [0, 0.5],
+    [0, 2.5],
+  ]),
+];
+
+const venomCoilEvents: BeatEvent[] = [
+  ...venomCoilHammers,
+  ...shiftBeats(venomCoilPulls, 8),
+  ...shiftBeats(venomCoilStrings, 16),
+  ...shiftBeats(venomCoilGallop, 24),
+  ...shiftBeats(venomCoilPulls, 32),
+  ...shiftBeats(venomCoilFinale, 40),
 ];
 
 export const SONGS: Song[] = [
@@ -466,6 +621,19 @@ export const SONGS: Song[] = [
     cover: { from: "#7f1d1d", to: "#111827", motif: "slash" },
     events: venomDriveEvents,
   }),
+  makeSong({
+    id: "venom-coil",
+    title: "Venom Coil",
+    artist: "DUS Studio",
+    difficulty: 4,
+    bpm: 100,
+    genre: "Metal",
+    category: "rock",
+    description:
+      "Advanced original metal riff for hammer-ons and pull-offs. Pick the first note of each slur, then hammer (h) to a higher fret or pull (p) to a lower one without picking again.",
+    cover: { from: "#4c0519", to: "#6d28d9", motif: "slash" },
+    events: venomCoilEvents,
+  }),
 ];
 
 export const LEARN_PATH = [
@@ -476,6 +644,7 @@ export const LEARN_PATH = [
   { songId: "ode-to-joy", title: "Play a melody", blurb: "A real tune with held notes and simple shifts." },
   { songId: "pentatonic-drive", title: "Rock vocabulary", blurb: "The minor pentatonic box used in countless riffs." },
   { songId: "venom-drive", title: "Metalcore chugs", blurb: "Palm-mute E5 eighths, then hit G5, C5 and D5." },
+  { songId: "venom-coil", title: "Hammer-ons & pull-offs", blurb: "Pick once, then hammer (h) and pull (p) on the same string." },
 ] as const;
 
 export function getSong(id: string): Song | undefined {

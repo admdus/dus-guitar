@@ -95,3 +95,55 @@ describe("SongEngine", () => {
     expect(engine.tick(countIn).counts.perfect).toBe(1);
   });
 });
+
+describe("Venom metal trainers", () => {
+  it("includes Venom Drive power-chord chugs", () => {
+    const song = getSong("venom-drive")!;
+    expect(song.genre).toBe("Metal");
+    expect(song.notes.some((n) => n.chordGroup !== undefined)).toBe(true);
+    expect(song.notes.length).toBeGreaterThan(40);
+  });
+
+  it("includes Venom Coil hammer-ons and pull-offs", () => {
+    const song = getSong("venom-coil")!;
+    expect(song.difficulty).toBe(4);
+    const hammers = song.notes.filter((n) => n.technique === "hammer");
+    const pulls = song.notes.filter((n) => n.technique === "pull");
+    expect(hammers.length).toBeGreaterThan(8);
+    expect(pulls.length).toBeGreaterThan(8);
+    expect(hammers.every((n) => n.chordGroup === undefined)).toBe(true);
+  });
+});
+
+describe("legato scoring", () => {
+  const song = getSong("venom-coil")!;
+  const countInMs = (60 / song.bpm) * 4 * 1000;
+
+  it("scores a hammer-on from a pitch change without a pick attack", () => {
+    const hammer = song.notes.find((n) => n.technique === "hammer")!;
+    const engine = new SongEngine(song);
+    engine.start(0);
+    const at = countInMs + hammer.time * 1000;
+    engine.feedPitch(noteMidi(hammer.string, Math.max(0, hammer.fret - 2)), at - 30, false);
+    expect(engine.feedPitch(noteMidi(hammer.string, hammer.fret), at, false)).toBe("perfect");
+  });
+
+  it("scores a pull-off from a pitch drop without a pick attack", () => {
+    const pull = song.notes.find((n) => n.technique === "pull")!;
+    const engine = new SongEngine(song);
+    engine.start(0);
+    const at = countInMs + pull.time * 1000;
+    engine.feedPitch(noteMidi(pull.string, pull.fret + 2), at - 30, false);
+    expect(engine.feedPitch(noteMidi(pull.string, pull.fret), at, false)).toBe("perfect");
+  });
+
+  it("does not score a picked note from a held pitch without onset", () => {
+    const engine = new SongEngine(song);
+    engine.start(0);
+    const first = song.notes[0];
+    expect(first.technique).toBeUndefined();
+    const at = countInMs + first.time * 1000;
+    expect(engine.feedPitch(noteMidi(first.string, first.fret), at, false)).toBeNull();
+    expect(engine.tick(at).notes[0].status).toBe("pending");
+  });
+});

@@ -1,6 +1,7 @@
 import type { EngineSnapshot, Judge, LiveNote, Song, StringIndex } from "../types";
 import { noteMidi, pitchMatches, starsForAccuracy } from "./notes";
 import { hitAccuracy, JUDGE_WINDOWS, judgeTiming, pointsFor } from "./score";
+import { isLegato } from "./tab";
 
 export interface EngineOptions {
   latencyMs?: number;
@@ -17,6 +18,7 @@ export class SongEngine {
   private maxCombo = 0;
   private counts: Record<Judge, number> = { perfect: 0, great: 0, good: 0, miss: 0 };
   private lastJudge: Judge | null = null;
+  private lastHeardMidi: number | null = null;
   private originMs = 0;
   private pausedAt = 0;
   private latencyMs: number;
@@ -72,6 +74,7 @@ export class SongEngine {
     this.maxCombo = 0;
     this.counts = { perfect: 0, great: 0, good: 0, miss: 0 };
     this.lastJudge = null;
+    this.lastHeardMidi = null;
     this.originMs = 0;
     this.pausedAt = 0;
   }
@@ -91,6 +94,10 @@ export class SongEngine {
   feedPitch(midi: number, nowMs = this.nowMs(), onset = true): Judge | null {
     if (!this.playing || this.finished) return null;
     const t = this.songTime(nowMs - this.latencyMs);
+    const pitchMoved = this.lastHeardMidi === null || Math.abs(midi - this.lastHeardMidi) >= 0.45;
+    this.lastHeardMidi = midi;
+    // Hammer-ons and pull-offs have no pick attack — score them on a pitch change.
+    if (!onset && !pitchMoved) return null;
     return this.tryHit((note) => pitchMatches(noteMidi(note.string, note.fret), midi), t, onset);
   }
 
@@ -138,6 +145,7 @@ export class SongEngine {
     for (const note of this.notes) {
       if (note.status !== "pending") continue;
       if (!matches(note)) continue;
+      if (!onset && !isLegato(note.technique)) continue;
       const delta = Math.abs(songTime - note.time);
       if (delta > JUDGE_WINDOWS.good) continue;
       if (delta < bestDelta) {
@@ -146,7 +154,6 @@ export class SongEngine {
       }
     }
     if (!best) return null;
-    if (!onset && bestDelta > JUDGE_WINDOWS.perfect) return null;
     return this.resolve(best, judgeTiming(best.time, songTime));
   }
 

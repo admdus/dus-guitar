@@ -98,8 +98,8 @@ export function PlayView({ songId, detected, guitarLive, latencyMs, onBack, onCo
 
   useEffect(() => {
     return guitarInput.subscribe((pitch) => {
-      if (!pitch?.onset) return;
-      engineRef.current?.feedPitch(pitch.midi, performance.now(), true);
+      if (!pitch) return;
+      engineRef.current?.feedPitch(pitch.midi, performance.now(), pitch.onset);
     });
   }, [songId]);
 
@@ -167,6 +167,7 @@ export function PlayView({ songId, detected, guitarLive, latencyMs, onBack, onCo
           <h1>{song.title}</h1>
           <p>
             {song.artist} · {song.bpm} BPM
+            {song.notes.some((n) => n.technique) ? " · h hammer-on · p pull-off" : ""}
           </p>
         </div>
         <div className="play-stats">
@@ -236,6 +237,12 @@ export function PlayView({ songId, detected, guitarLive, latencyMs, onBack, onCo
             {highlight ? ` · ${["", "e", "B", "G", "D", "A", "E"][highlight.string]}${highlight.fret}` : ""}
           </span>
         )}
+        {snap?.notes.find((n) => n.status === "pending")?.technique === "hammer" && (
+          <span className="technique-callout hammer">Next: hammer-on</span>
+        )}
+        {snap?.notes.find((n) => n.status === "pending")?.technique === "pull" && (
+          <span className="technique-callout pull">Next: pull-off</span>
+        )}
       </div>
 
       <div className="fret-stage">
@@ -251,7 +258,15 @@ export function PlayView({ songId, detected, guitarLive, latencyMs, onBack, onCo
 
       {!guitarLive && (
         <p className="practice-hint">
-          No guitar connected. Click the highlighted frets on the neck, or enable <b>Space to hit</b> to practice timing.
+          No guitar connected. Click the highlighted frets on the neck, or enable <b>Space to hit</b> to practice
+          timing.
+          {song.notes.some((n) => n.technique) ? (
+            <>
+              {" "}
+              Notes marked <b>h</b> are hammer-ons and <b>p</b> are pull-offs — pick the first note, then hammer or
+              pull without picking again.
+            </>
+          ) : null}
         </p>
       )}
 
