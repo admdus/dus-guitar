@@ -72,10 +72,13 @@ export function App() {
           error={guitar.error}
           devices={guitar.devices}
           deviceId={guitar.deviceId}
+          channel={guitar.channel}
+          capture={guitar.capture}
           detected={guitar.detected}
           onConnect={(id) => void guitar.connect(id)}
           onDisconnect={() => void guitar.disconnect()}
-          onRefresh={() => void guitar.refreshDevices()}
+          onRefresh={guitar.refreshDevices}
+          onChannel={guitar.setChannel}
         />
       );
     }

@@ -4,7 +4,7 @@ A Windows desktop app for learning guitar songs. Plug in a guitar, pick a track,
 
 ## What it does
 
-- **Connect a guitar** through an audio interface (electric) or a microphone (acoustic)
+- **Connect a guitar** through a USB interface such as the Focusrite Scarlett 2i2, or a microphone (acoustic)
 - **Browse songs** on a dark, card-based home and library
 - **Follow the fretboard** as numbered notes scroll toward the play line in time
 - **Score timing and pitch** — Perfect / Great / Good / Miss, combo, accuracy, and stars
@@ -33,8 +33,8 @@ npm run electron
 
 ## How to play
 
-1. Plug the guitar into an audio interface, or place a mic in front of an acoustic.
-2. Open **Guitar** in the sidebar and choose that input. Pick a string — the meter should jump and a note name should appear.
+1. Plug the guitar into an audio interface (Scarlett 2i2: Input 1 + INST), or place a mic in front of an acoustic.
+2. Open **Guitar** in the sidebar and choose that input (not Loopback). Pick a string — the meter should jump and a note name should appear.
 3. Use **Tuner** so each open string is in tune (E A D G B e).
 4. Pick a song. After a 4-beat count-in, notes slide toward the cyan **PLAY** line.
 5. Fret and pick the matching note when it arrives. The bouncing ball marks the current string. Hits light up; misses fade red.
@@ -47,6 +47,20 @@ Speed can be 50%, 75%, or 100%. Turn **Click** on for a metronome. **Space to hi
 - Turn off echo cancellation / “enhancements” on the Windows recording device if the pitch is unstable.
 - If hits feel late, raise **Input latency** on the Guitar page (try 20–80 ms).
 - YIN pitch detection is monophonic: single notes score exactly; chords count as a hit if any note in the shape is picked on time.
+
+## Focusrite Scarlett 2i2
+
+Yes — DUS Guitar is built to use a Scarlett 2i2 (2nd, 3rd, or 4th gen) on Windows.
+
+The desktop app talks to the interface through WASAPI (the same path Chromium uses). You do **not** need the Focusrite ASIO driver for this app, and a DAW that has ASIO exclusive access will block it.
+
+1. Plug the guitar into **Input 1** and press **INST**.
+2. Set **GAIN 1** so the halo stays green when you pick (red means clipping).
+3. Open **Guitar** in the sidebar. Choose the device named Scarlett / Focusrite — not **Loopback**.
+4. Leave the channel on **Input 1 · Guitar / INST** unless the guitar is in Input 2.
+5. Pick an open string. The meter should jump and a note name should appear.
+
+If Windows cannot open the device, close Ableton, Reaper, or other hosts using Focusrite ASIO, then Reconnect. In Focusrite Control or Windows Sound, 44.1 kHz or 48 kHz is the most reliable shared-mode rate.
 
 ## Songs
 

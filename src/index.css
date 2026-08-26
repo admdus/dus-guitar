@@ -136,6 +136,7 @@ h2, h3 { margin: 0; }
 .btn.ghost { background: transparent; }
 .hero-actions, .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .chip.on, .device.on { border-color: var(--accent); color: var(--accent); background: rgba(34,211,238,0.08); }
+.chip:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .search {
   min-width: 260px;
@@ -289,6 +290,49 @@ h2, h3 { margin: 0; }
   padding: 18px 20px;
 }
 .device-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.device-group { margin: 8px 0 4px; }
+.device-group-title {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.device {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.device em {
+  font-style: normal;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(34, 211, 238, 0.16);
+  color: var(--accent);
+}
+.device.loopback { opacity: 0.7; }
+.device.loopback em {
+  background: rgba(251, 113, 133, 0.16);
+  color: var(--danger);
+}
+.channel-picks { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
+.hint-list {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+.hint-list strong { color: var(--text); }
+.capture-meta {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.capture-meta strong { color: var(--text); }
 .level-wrap { display: flex; align-items: center; gap: 12px; }
 .level-bar { flex: 1; height: 12px; background: #0b0d14; border-radius: 999px; overflow: hidden; }
 .level-bar span { display: block; height: 100%; background: linear-gradient(90deg, #22d3ee, #34d399); }
