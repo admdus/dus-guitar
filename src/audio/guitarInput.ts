@@ -1,68 +1,129 @@
 import { detectPitchYin, isOnset, rmsAmplitude } from "./pitch";
 import { centsOff, freqToMidi, midiToName } from "../engine/notes";
+import {
+  openCaptureStream,
+  rankInputDevices,
+  toInputDevice,
+  type CaptureInfo,
+  type InputChannel,
+  type InputDevice,
+} from "./devices";
 import type { DetectedPitch } from "../types";
 
-export interface InputDevice {
-  deviceId: string;
-  label: string;
-}
-
+export type { InputDevice, InputChannel, CaptureInfo } from "./devices";
 export type PitchListener = (pitch: DetectedPitch | null) => void;
+export type DeviceListener = () => void;
 
 export class GuitarInput {
   private ctx: AudioContext | null = null;
   private stream: MediaStream | null = null;
+  private source: MediaStreamAudioSourceNode | null = null;
+  private splitter: ChannelSplitterNode | null = null;
   private analyser: AnalyserNode | null = null;
   private buffer: Float32Array | null = null;
   private raf = 0;
   private previousRms = 0;
   private listeners = new Set<PitchListener>();
+  private deviceListeners = new Set<DeviceListener>();
   private deviceId: string | undefined;
+  private channel: InputChannel = 0;
   private lastPitch: DetectedPitch | null = null;
+  private watchingDevices = false;
   running = false;
 
   async listDevices(): Promise<InputDevice[]> {
     if (!navigator.mediaDevices?.enumerateDevices) return [];
+    await this.ensureDeviceLabels();
     const devices = await navigator.mediaDevices.enumerateDevices();
-    return devices
-      .filter((d) => d.kind === "audioinput")
-      .map((d, i) => ({
-        deviceId: d.deviceId,
-        label: d.label || `Microphone ${i + 1}`,
-      }));
+    return rankInputDevices(
+      devices
+        .filter((device) => device.kind === "audioinput")
+        .map((device, index) => toInputDevice(device, index)),
+    );
   }
 
-  async start(deviceId?: string) {
+  watchDevices(listener: DeviceListener) {
+    this.deviceListeners.add(listener);
+    this.ensureDeviceWatch();
+    return () => {
+      this.deviceListeners.delete(listener);
+    };
+  }
+
+  async start(deviceId?: string, channel: InputChannel = 0) {
     await this.stop();
     this.deviceId = deviceId;
-    this.stream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        deviceId: deviceId ? { exact: deviceId } : undefined,
-        echoCancellation: false,
-        noiseSuppression: false,
-        autoGainControl: false,
-        channelCount: 1,
-      },
-    });
+    this.channel = channel;
+    this.stream = await openCaptureStream(deviceId);
+    const track = this.stream.getAudioTracks()[0];
+    if (track) {
+      this.deviceId = track.getSettings().deviceId || deviceId;
+      try {
+        await track.applyConstraints({
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+        });
+      } catch {
+        /* some WASAPI endpoints reject post-open constraint updates */
+      }
+    }
+
     const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    this.ctx = new Ctx({ latencyHint: "interactive" });
+    const sampleRate = track?.getSettings().sampleRate;
+    try {
+      this.ctx = sampleRate ? new Ctx({ latencyHint: "interactive", sampleRate }) : new Ctx({ latencyHint: "interactive" });
+    } catch {
+      this.ctx = new Ctx({ latencyHint: "interactive" });
+    }
     await this.ctx.resume();
-    const source = this.ctx.createMediaStreamSource(this.stream);
+
+    this.source = this.ctx.createMediaStreamSource(this.stream);
+    const reported = Math.max(1, this.source.channelCount || 1);
+    this.splitter = this.ctx.createChannelSplitter(Math.max(2, reported));
     this.analyser = this.ctx.createAnalyser();
     this.analyser.fftSize = 4096;
     this.analyser.smoothingTimeConstant = 0;
-    source.connect(this.analyser);
+    this.source.connect(this.splitter);
+    this.routeChannel();
     this.buffer = new Float32Array(this.analyser.fftSize);
     this.running = true;
     this.loop();
+  }
+
+  setChannel(channel: InputChannel) {
+    this.channel = channel;
+    this.routeChannel();
+  }
+
+  getChannel() {
+    return this.channel;
+  }
+
+  getCaptureInfo(): CaptureInfo | null {
+    if (!this.running || !this.ctx || !this.stream) return null;
+    const track = this.stream.getAudioTracks()[0];
+    const settings = track?.getSettings() ?? {};
+    return {
+      deviceId: this.deviceId,
+      label: track?.label || "Audio interface",
+      channel: this.channel,
+      sampleRate: this.ctx.sampleRate || settings.sampleRate || 0,
+      channelCount: this.source?.channelCount || settings.channelCount || 1,
+    };
   }
 
   async stop() {
     this.running = false;
     if (this.raf) cancelAnimationFrame(this.raf);
     this.raf = 0;
-    this.stream?.getTracks().forEach((t) => t.stop());
+    this.splitter?.disconnect();
+    this.source?.disconnect();
+    this.analyser?.disconnect();
+    this.stream?.getTracks().forEach((track) => track.stop());
     this.stream = null;
+    this.source = null;
+    this.splitter = null;
     await this.ctx?.close().catch(() => undefined);
     this.ctx = null;
     this.analyser = null;
@@ -84,6 +145,35 @@ export class GuitarInput {
     return () => {
       this.listeners.delete(listener);
     };
+  }
+
+  private routeChannel() {
+    if (!this.splitter || !this.analyser) return;
+    const maxIndex = Math.max(0, this.splitter.numberOfOutputs - 1);
+    const index = Math.min(this.channel, maxIndex);
+    this.splitter.disconnect();
+    this.splitter.connect(this.analyser, index, 0);
+  }
+
+  private async ensureDeviceLabels() {
+    if (this.running) return;
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const inputs = devices.filter((device) => device.kind === "audioinput");
+      if (inputs.length > 0 && inputs.every((device) => device.label)) return;
+      const probe = await openCaptureStream();
+      probe.getTracks().forEach((track) => track.stop());
+    } catch {
+      /* permission prompt may be pending; labels stay generic until then */
+    }
+  }
+
+  private ensureDeviceWatch() {
+    if (this.watchingDevices || !navigator.mediaDevices?.addEventListener) return;
+    this.watchingDevices = true;
+    navigator.mediaDevices.addEventListener("devicechange", () => {
+      for (const listener of this.deviceListeners) listener();
+    });
   }
 
   private loop = () => {
