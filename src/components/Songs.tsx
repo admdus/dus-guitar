@@ -40,12 +40,13 @@ export function Songs({ onPlay, scores }: Props) {
           <p className="eyebrow">Library</p>
           <h1>Songs</h1>
         </div>
-        <input
-          className="search"
-          placeholder="Search title or artist"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+          <input
+            className="search"
+            name="song-search"
+            placeholder="Search title or artist"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
       </header>
       <div className="filters">
         {FILTERS.map((item) => (

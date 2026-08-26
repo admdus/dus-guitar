@@ -103,6 +103,7 @@ export function App() {
             Input latency
             <input
               type="range"
+              name="input-latency"
               min={0}
               max={120}
               value={latencyMs}

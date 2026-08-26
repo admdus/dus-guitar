@@ -82,7 +82,7 @@ export function drawFretboard(
   drawBall(ctx, height, snap);
   drawDetected(ctx, height, detected);
 
-  if (snap.countInBeatsLeft > 0) {
+  if (snap.playing && snap.countInBeatsLeft > 0) {
     ctx.fillStyle = "rgba(8,10,16,0.35)";
     ctx.fillRect(0, 0, width, height);
     ctx.fillStyle = "#f8fafc";
