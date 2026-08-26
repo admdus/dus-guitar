@@ -64,9 +64,9 @@ If Windows cannot open the device, close Ableton, Reaper, or other hosts using F
 
 ## Songs
 
-The library mixes original riffs (`Power Pulse`, `Pentatonic Drive`, `Blue Porch`, `Venom Drive`, `Venom Coil`, `Venom Arc`) with public-domain melodies (`Ode to Joy`, `Amazing Grace`, `The Rising Sun`). Nothing here is a licensed pop transcription.
+The library mixes original riffs (`Power Pulse`, `Pentatonic Drive`, `Blue Porch`, `Venom Drive`, `Venom Coil`, `Venom Arc`, `Venom Rake`) with public-domain melodies (`Ode to Joy`, `Amazing Grace`, `The Rising Sun`). Nothing here is a licensed pop transcription.
 
-`Venom Drive` is an original metalcore chug — palm-muted E5, then G5, C5 and D5. Switch the app to Drop D and the same riff uses one-finger power chords. `Venom Coil` is the advanced metal trainer: notes marked **h** are hammer-ons and **p** are pull-offs. Pick the first note of a slur, then hammer or pull on the same string without picking again. `Venom Arc` trains metal arpeggios: pick one note at a time through Em, C, G and D shapes, then sixteenth-note sweeps (including B diminished and a 7th-position Em).
+`Venom Drive` is an original metalcore chug — palm-muted E5, then G5, C5 and D5. Switch the app to Drop D and the same riff uses one-finger power chords. `Venom Coil` is the advanced metal trainer: notes marked **h** are hammer-ons and **p** are pull-offs. Pick the first note of a slur, then hammer or pull on the same string without picking again. `Venom Arc` trains metal arpeggios: pick one note at a time through Em, C, G and D shapes, then sixteenth-note sweeps (including B diminished and a 7th-position Em). `Venom Rake` is the sweep-picking trainer: one note per adjacent string through 5-string Em, C and B diminished (eighths, then quintuplets), 6-string Em sextuplets, and a hammer-on at the peak of the Em shape.
 
 ## Scripts
 

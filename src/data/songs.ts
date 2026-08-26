@@ -1,5 +1,5 @@
 import type { Song } from "../types";
-import { fromBeats, legatoPhrase, loopBar, shiftBeats, songDuration, asTabEvent, arpeggioSweep, type BeatEvent, type BeatTuple, type ArpeggioShape } from "../engine/tab";
+import { fromBeats, legatoPhrase, loopBar, shiftBeats, songDuration, asTabEvent, arpeggioSweep, sweepWithHammer, type BeatEvent, type BeatTuple, type ArpeggioShape } from "../engine/tab";
 
 function makeSong(
   song: Omit<Song, "notes" | "duration"> & { events: BeatEvent[] },
@@ -541,6 +541,69 @@ const venomArcEvents: BeatEvent[] = [
   { beat: 37, string: 6, fret: 0, duration: 2.8 },
 ];
 
+// Original metal sweep-picking trainer — one note per adjacent string.
+// 5-string Em / C / Bdim at eighths then quintuplets, 6-string Em sextuplets,
+// then a hammer-on at the peak of the Em shape. Frets stay within 0–12.
+// Not a transcription of any licensed song.
+const EM5_SWEEP: ArpeggioShape = [
+  [5, 7],
+  [4, 9],
+  [3, 9],
+  [2, 8],
+  [1, 7],
+];
+const C5_SWEEP: ArpeggioShape = [
+  [5, 10],
+  [4, 10],
+  [3, 9],
+  [2, 8],
+  [1, 8],
+];
+const BDIM5_SWEEP: ArpeggioShape = [
+  [5, 2],
+  [4, 3],
+  [3, 4],
+  [2, 3],
+  [1, 2],
+];
+const EM6_SWEEP: ArpeggioShape = [
+  [6, 0],
+  [5, 2],
+  [4, 2],
+  [3, 0],
+  [2, 0],
+  [1, 0],
+];
+const QUINT = 0.2;
+const SEXT = 1 / 6;
+
+const venomRakeEvents: BeatEvent[] = [
+  // Eighth-note 5-string Em — learn the shape slowly (10 notes = 5 beats)
+  ...arpeggioSweep(0, EM5_SWEEP, 0.5),
+  { beat: 5, string: 5, fret: 7, duration: 3 },
+  // Quintuplet Em sweeps (10 notes = 2 beats each)
+  ...arpeggioSweep(8, EM5_SWEEP, QUINT),
+  ...arpeggioSweep(10, EM5_SWEEP, QUINT),
+  ...arpeggioSweep(12, EM5_SWEEP, QUINT),
+  ...arpeggioSweep(14, EM5_SWEEP, QUINT),
+  // C major, then B diminished
+  ...arpeggioSweep(16, C5_SWEEP, QUINT),
+  ...arpeggioSweep(18, C5_SWEEP, QUINT),
+  ...arpeggioSweep(20, BDIM5_SWEEP, QUINT),
+  ...arpeggioSweep(22, BDIM5_SWEEP, QUINT),
+  // 6-string open Em, eighths then sextuplets
+  ...arpeggioSweep(24, EM6_SWEEP, 0.5),
+  { beat: 30, string: 6, fret: 0, duration: 2 },
+  ...arpeggioSweep(32, EM6_SWEEP, SEXT),
+  ...arpeggioSweep(34, EM6_SWEEP, SEXT),
+  ...arpeggioSweep(36, EM6_SWEEP, SEXT),
+  ...arpeggioSweep(38, EM6_SWEEP, SEXT),
+  // Peak hammer on Em (7h12p7), then resolve on open low E
+  ...sweepWithHammer(40, EM5_SWEEP, 0.25, 12),
+  ...sweepWithHammer(43, EM5_SWEEP, 0.25, 12),
+  { beat: 46, string: 6, fret: 0, duration: 3 },
+];
+
 export const SONGS: Song[] = [
   makeSong({
     id: "spark",
@@ -713,6 +776,19 @@ export const SONGS: Song[] = [
     cover: { from: "#9a3412", to: "#1e1b4b", motif: "slash" },
     events: venomArcEvents,
   }),
+  makeSong({
+    id: "venom-rake",
+    title: "Venom Rake",
+    artist: "DUS Studio",
+    difficulty: 5,
+    bpm: 80,
+    genre: "Metal",
+    category: "rock",
+    description:
+      "Original metal sweep-picking trainer. One note per string through 5-string Em, C and B diminished — eighths first, then quintuplets — then 6-string Em sextuplets. Hammer (h) the peak of the Em shape and pull (p) back. Not a transcription.",
+    cover: { from: "#0c4a6e", to: "#be123c", motif: "slash" },
+    events: venomRakeEvents,
+  }),
 ];
 
 export const LEARN_PATH = [
@@ -725,6 +801,7 @@ export const LEARN_PATH = [
   { songId: "venom-drive", title: "Metalcore chugs", blurb: "Palm-mute E5 eighths, then hit G5, C5 and D5." },
   { songId: "venom-coil", title: "Hammer-ons & pull-offs", blurb: "Pick once, then hammer (h) and pull (p) on the same string." },
   { songId: "venom-arc", title: "Metal arpeggios", blurb: "Pick across the strings through Em, C, G and D, then sweep sixteenths." },
+  { songId: "venom-rake", title: "Sweep picking", blurb: "Rake one note per string through 5-string Em, C and Bdim, then 6-string Em. Hammer the peak." },
 ] as const;
 
 export function getSong(id: string): Song | undefined {
