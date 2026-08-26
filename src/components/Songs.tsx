@@ -7,7 +7,7 @@ interface Props {
   scores: Record<string, { stars: number }>;
 }
 
-const FILTERS = ["All", "Beginner", "Rock", "Folk", "Classical", "Exercise"] as const;
+const FILTERS = ["All", "Beginner", "Rock", "Metal", "Folk", "Classical", "Exercise"] as const;
 
 export function Songs({ onPlay, scores }: Props) {
   const [query, setQuery] = useState("");
@@ -27,6 +27,7 @@ export function Songs({ onPlay, scores }: Props) {
         (filter === "Beginner" && song.category === "beginner") ||
         (filter === "Exercise" && song.category === "exercise") ||
         (filter === "Rock" && song.category === "rock") ||
+        (filter === "Metal" && song.genre === "Metal") ||
         (filter === "Folk" && song.category === "folk") ||
         (filter === "Classical" && song.category === "classical");
       return matchesQuery && matchesFilter;

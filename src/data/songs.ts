@@ -12,6 +12,44 @@ function makeSong(
   };
 }
 
+/** Two-string power chord: root plus the fifth on the next thinner string. */
+function powerChord(
+  beat: number,
+  rootString: 5 | 6,
+  fret: number,
+  duration: number,
+  group: number,
+): BeatEvent[] {
+  return [
+    [beat, rootString, fret, duration, group],
+    [beat, rootString - 1, fret + 2, duration, group],
+  ];
+}
+
+function chug(
+  start: number,
+  count: number,
+  step: number,
+  rootString: 5 | 6,
+  fret: number,
+  duration: number,
+  groupStart: number,
+): BeatEvent[] {
+  const out: BeatEvent[] = [];
+  for (let i = 0; i < count; i++) {
+    out.push(...powerChord(start + i * step, rootString, fret, duration, groupStart + i));
+  }
+  return out;
+}
+
+function shiftBeats(events: BeatEvent[], beatOffset: number, groupOffset: number): BeatEvent[] {
+  return events.map(([beat, str, fret, duration, group]) => {
+    const next: BeatEvent = [beat + beatOffset, str, fret, duration];
+    if (group !== undefined) next[4] = group + groupOffset;
+    return next;
+  });
+}
+
 const sparkEvents: BeatEvent[] = [
   [0, 6, 0, 0.7],
   [1, 5, 0, 0.7],
@@ -253,6 +291,35 @@ for (let bar = 0; bar < 4; bar++) {
   }
 }
 
+// Original metalcore trainer — palm-muted E5 chugs plus G5 / C5 / D5 hits.
+// Standard tuning, two-string shapes. Not a transcription of any licensed song.
+const venomVerse: BeatEvent[] = [
+  ...chug(0, 8, 0.5, 6, 0, 0.45, 1),
+  ...chug(4, 4, 0.5, 6, 0, 0.45, 10),
+  ...chug(6, 4, 0.5, 6, 3, 0.45, 20),
+  ...chug(8, 8, 0.5, 5, 3, 0.45, 30),
+  ...chug(12, 4, 0.5, 5, 5, 0.45, 40),
+  ...powerChord(14, 6, 0, 1.8, 50),
+];
+
+const venomChorus: BeatEvent[] = [
+  ...powerChord(0, 6, 0, 1.8, 1),
+  ...powerChord(2, 6, 3, 1.8, 2),
+  ...powerChord(4, 5, 3, 1.8, 3),
+  ...powerChord(6, 5, 5, 1.8, 4),
+  ...chug(8, 8, 0.5, 6, 0, 0.45, 10),
+  ...powerChord(12, 6, 3, 0.9, 20),
+  ...powerChord(13, 5, 3, 0.9, 21),
+  ...powerChord(14, 5, 5, 0.9, 22),
+  ...powerChord(15, 6, 0, 1.6, 23),
+];
+
+const venomDriveEvents: BeatEvent[] = [
+  ...venomVerse,
+  ...shiftBeats(venomVerse, 16, 100),
+  ...shiftBeats(venomChorus, 32, 200),
+];
+
 export const SONGS: Song[] = [
   makeSong({
     id: "spark",
@@ -386,6 +453,19 @@ export const SONGS: Song[] = [
     cover: { from: "#b45309", to: "#65a30d", motif: "flame" },
     events: campfireEvents,
   }),
+  makeSong({
+    id: "venom-drive",
+    title: "Venom Drive",
+    artist: "DUS Studio",
+    difficulty: 3,
+    bpm: 120,
+    genre: "Metal",
+    category: "rock",
+    description:
+      "Metalcore chugs in standard tuning. Palm-mute eighth-note E5, then G5, C5 and D5. Let the chorus hits ring.",
+    cover: { from: "#7f1d1d", to: "#111827", motif: "slash" },
+    events: venomDriveEvents,
+  }),
 ];
 
 export const LEARN_PATH = [
@@ -395,6 +475,7 @@ export const LEARN_PATH = [
   { songId: "power-pulse", title: "Power chords", blurb: "Two-string rock shapes. Strum both notes together." },
   { songId: "ode-to-joy", title: "Play a melody", blurb: "A real tune with held notes and simple shifts." },
   { songId: "pentatonic-drive", title: "Rock vocabulary", blurb: "The minor pentatonic box used in countless riffs." },
+  { songId: "venom-drive", title: "Metalcore chugs", blurb: "Palm-mute E5 eighths, then hit G5, C5 and D5." },
 ] as const;
 
 export function getSong(id: string): Song | undefined {

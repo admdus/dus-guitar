@@ -46,7 +46,13 @@ export function Home({ onPlay, onSetup, guitarStatus, scores }: Props) {
       </div>
 
       <SongRow title="Beginner tracks" songs={songsByCategory("beginner")} scores={scores} onPlay={onPlay} />
-      <SongRow title="Rock & blues" songs={songsByCategory("rock")} scores={scores} onPlay={onPlay} />
+      <SongRow title="Metal" songs={SONGS.filter((s) => s.genre === "Metal")} scores={scores} onPlay={onPlay} />
+      <SongRow
+        title="Rock & blues"
+        songs={songsByCategory("rock").filter((s) => s.genre !== "Metal")}
+        scores={scores}
+        onPlay={onPlay}
+      />
       <SongRow title="Folk & campfire" songs={songsByCategory("folk")} scores={scores} onPlay={onPlay} />
     </div>
   );
