@@ -1,4 +1,5 @@
-import { SONGS, songsByCategory } from "../data/songs";
+import { SONGS, getSong, songsByCategory } from "../data/songs";
+import { loadImportedSongs } from "../data/library";
 import { SongRow } from "./SongCard";
 import { Stars } from "./Icons";
 import { TuningPicker } from "./TuningPicker";
@@ -53,6 +54,7 @@ export function Home({ onPlay, onSetup, guitarStatus, scores, tuning, onTuning }
         <div className={`hero-art motif-${continueSong.cover.motif}`} />
       </div>
 
+      <SongRow title="Imported tracks" songs={loadImportedSongs()} scores={scores} onPlay={onPlay} />
       <SongRow title="Beginner tracks" songs={songsByCategory("beginner")} scores={scores} onPlay={onPlay} />
       <SongRow title="Metal" songs={SONGS.filter((s) => s.genre === "Metal")} scores={scores} onPlay={onPlay} />
       <SongRow
@@ -70,5 +72,5 @@ function bestContinue(scores: Record<string, { stars: number; accuracy: number }
   const ids = Object.keys(scores);
   if (ids.length === 0) return undefined;
   const last = ids[ids.length - 1];
-  return SONGS.find((s) => s.id === last);
+  return getSong(last);
 }

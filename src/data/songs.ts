@@ -1,4 +1,5 @@
 import type { Song } from "../types";
+import { findImportedSong } from "./library";
 import { fromBeats, legatoPhrase, loopBar, shiftBeats, songDuration, asTabEvent, arpeggioSweep, sweepWithHammer, type BeatEvent, type BeatTuple, type ArpeggioShape } from "../engine/tab";
 
 function makeSong(
@@ -805,7 +806,7 @@ export const LEARN_PATH = [
 ] as const;
 
 export function getSong(id: string): Song | undefined {
-  return SONGS.find((song) => song.id === id);
+  return SONGS.find((song) => song.id === id) ?? findImportedSong(id);
 }
 
 export function songsByCategory(category: Song["category"]): Song[] {
