@@ -138,3 +138,39 @@ export function arpeggioSweep(
     duration: step * 0.9,
   }));
 }
+
+/**
+ * One-note-per-string metal sweep with a hammer-on at the peak.
+ * Pick bass → treble, hammer a higher fret on the top string, pull off,
+ * then descend. Cross-string notes are picked; only the peak is legato.
+ */
+export function sweepWithHammer(
+  startBeat: number,
+  shape: ArpeggioShape,
+  step: number,
+  peakFret: number,
+): TabEvent[] {
+  if (shape.length === 0) return [];
+  const [topString, topFret] = shape[shape.length - 1];
+  const up = arpeggioSweep(startBeat, shape, step, false);
+  const hammerAt = startBeat + shape.length * step;
+  const peak: TabEvent[] = [
+    {
+      beat: hammerAt,
+      string: topString,
+      fret: peakFret,
+      duration: step * 0.9,
+      technique: "hammer",
+    },
+    {
+      beat: hammerAt + step,
+      string: topString,
+      fret: topFret,
+      duration: step * 0.9,
+      technique: "pull",
+    },
+  ];
+  const downShape: ArpeggioShape = [...shape].reverse().slice(1);
+  const down = arpeggioSweep(hammerAt + 2 * step, downShape, step, false);
+  return [...up, ...peak, ...down];
+}

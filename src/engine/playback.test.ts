@@ -127,6 +127,33 @@ describe("Venom metal trainers", () => {
     const strings = new Set(song.notes.map((n) => n.string));
     expect(strings.size).toBeGreaterThanOrEqual(5);
   });
+
+  it("includes Venom Rake as 5- and 6-string sweep picking", () => {
+    const song = getSong("venom-rake")!;
+    expect(song.genre).toBe("Metal");
+    expect(song.bpm).toBe(80);
+    expect(song.difficulty).toBe(5);
+    expect(song.notes.length).toBeGreaterThan(120);
+    expect(song.notes.every((n) => n.fret <= 12)).toBe(true);
+    expect(song.notes.every((n) => n.chordGroup === undefined)).toBe(true);
+    const hammers = song.notes.filter((n) => n.technique === "hammer");
+    const pulls = song.notes.filter((n) => n.technique === "pull");
+    expect(hammers.length).toBe(2);
+    expect(pulls.length).toBe(2);
+    expect(hammers.every((n) => n.string === 1 && n.fret === 12)).toBe(true);
+    const strings = new Set(song.notes.map((n) => n.string));
+    expect(strings.size).toBe(6);
+    const stringChanges = song.notes.filter((n, i) => i > 0 && n.string !== song.notes[i - 1].string).length;
+    expect(stringChanges).toBeGreaterThan(100);
+    for (let i = 1; i < song.notes.length; i++) {
+      expect(Math.abs(song.notes[i].string - song.notes[i - 1].string)).toBeLessThanOrEqual(1);
+    }
+    const engine = new SongEngine(song);
+    const countIn = (60 / song.bpm) * 4 * 1000;
+    engine.start(0);
+    const midi = noteMidi(song.notes[0].string, song.notes[0].fret);
+    expect(engine.feedPitch(midi, countIn, true)).toBe("perfect");
+  });
 });
 
 describe("legato scoring", () => {

@@ -1,4 +1,4 @@
-import { arpeggioSweep, fromBeats, legatoPhrase, techniqueFromFrets } from "./tab";
+import { arpeggioSweep, fromBeats, legatoPhrase, sweepWithHammer, techniqueFromFrets } from "./tab";
 
 describe("techniqueFromFrets", () => {
   it("classifies hammer, pull, and same-fret", () => {
@@ -65,5 +65,36 @@ describe("arpeggioSweep", () => {
     expect(notes).toHaveLength(8);
     expect(notes[0].time).toBe(0);
     expect(notes[1].time).toBeCloseTo(60 / 96 / 4);
+  });
+});
+
+describe("sweepWithHammer", () => {
+  const em5: Array<[number, number]> = [
+    [5, 7],
+    [4, 9],
+    [3, 9],
+    [2, 8],
+    [1, 7],
+  ];
+
+  it("picks up the shape, hammers the peak, pulls, then descends", () => {
+    const events = sweepWithHammer(0, em5, 0.25, 12);
+    expect(events).toHaveLength(11);
+    expect(events[0]).toMatchObject({ beat: 0, string: 5, fret: 7 });
+    expect(events[4]).toMatchObject({ beat: 1, string: 1, fret: 7 });
+    expect(events[4].technique).toBeUndefined();
+    expect(events[5]).toMatchObject({ beat: 1.25, string: 1, fret: 12, technique: "hammer" });
+    expect(events[6]).toMatchObject({ beat: 1.5, string: 1, fret: 7, technique: "pull" });
+    expect(events[7]).toMatchObject({ beat: 1.75, string: 2, fret: 8 });
+    expect(events[10]).toMatchObject({ beat: 2.5, string: 5, fret: 7 });
+    expect(events.filter((e) => e.technique === "hammer")).toHaveLength(1);
+    expect(events.filter((e) => e.technique === "pull")).toHaveLength(1);
+  });
+
+  it("keeps cross-string motion adjacent", () => {
+    const events = sweepWithHammer(4, em5, 0.2, 12);
+    for (let i = 1; i < events.length; i++) {
+      expect(Math.abs(events[i].string - events[i - 1].string)).toBeLessThanOrEqual(1);
+    }
   });
 });
