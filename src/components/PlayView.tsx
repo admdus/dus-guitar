@@ -1,0 +1,294 @@
+import { useEffect, useRef, useState } from "react";
+import { drawFretboard } from "./FretboardCanvas";
+import { NeckBoard } from "./NeckBoard";
+import { IconBack, Stars } from "./Icons";
+import { SongEngine } from "../engine/playback";
+import { getSong, saveHighScore } from "../data/songs";
+import { bestPositionForMidi } from "../engine/notes";
+import { click, pluckFret, resumeAudio } from "../audio/synth";
+import { guitarInput } from "../audio/guitarInput";
+import type { DetectedPitch, EngineSnapshot, StringIndex } from "../types";
+
+interface Props {
+  songId: string;
+  detected: DetectedPitch | null;
+  guitarLive: boolean;
+  latencyMs: number;
+  onBack: () => void;
+  onConnect: () => void;
+}
+
+export function PlayView({ songId, detected, guitarLive, latencyMs, onBack, onConnect }: Props) {
+  const song = getSong(songId);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const engineRef = useRef<SongEngine | null>(null);
+  const snapRef = useRef<EngineSnapshot | null>(null);
+  const detectedRef = useRef(detected);
+  const lastBeatRef = useRef(-99);
+  const metronomeRef = useRef(true);
+  const savedRef = useRef(false);
+  const [hud, setHud] = useState<EngineSnapshot | null>(null);
+  const [speed, setSpeed] = useState(1);
+  const [metronome, setMetronome] = useState(true);
+  const [spaceAssist, setSpaceAssist] = useState(!guitarLive);
+
+  detectedRef.current = detected;
+  metronomeRef.current = metronome;
+
+  useEffect(() => {
+    if (!song) return;
+    const engine = new SongEngine(song, { latencyMs });
+    engineRef.current = engine;
+    snapRef.current = engine.snapshot();
+    setHud(engine.snapshot());
+    savedRef.current = false;
+    lastBeatRef.current = -99;
+    setSpeed(1);
+    let raf = 0;
+    let lastHud = 0;
+    const loop = (now: number) => {
+      const canvas = canvasRef.current;
+      const eng = engineRef.current;
+      if (canvas && eng) {
+        const snap = eng.tick(now);
+        snapRef.current = snap;
+        const parent = canvas.parentElement;
+        const w = parent?.clientWidth ?? 1200;
+        const h = parent?.clientHeight ?? 420;
+        const dpr = window.devicePixelRatio || 1;
+        if (canvas.width !== Math.floor(w * dpr) || canvas.height !== Math.floor(h * dpr)) {
+          canvas.width = Math.floor(w * dpr);
+          canvas.height = Math.floor(h * dpr);
+          canvas.style.width = `${w}px`;
+          canvas.style.height = `${h}px`;
+        }
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          drawFretboard(ctx, w, h, snap, detectedRef.current, song.bpm);
+        }
+        if (metronomeRef.current && snap.playing) {
+          const beatDur = 60 / song.bpm;
+          const timeline = snap.currentTime + beatDur * 4;
+          const beat = Math.floor(timeline / beatDur);
+          if (beat !== lastBeatRef.current && timeline >= 0) {
+            lastBeatRef.current = beat;
+            click(beat % 4 === 0);
+          }
+        }
+        if (now - lastHud > 80) {
+          lastHud = now;
+          setHud(snap);
+        }
+        if (snap.finished && !savedRef.current) {
+          savedRef.current = true;
+          setHud(snap);
+          saveHighScore(song.id, snap.accuracy, snap.stars, snap.score);
+        }
+      }
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, [songId, song, latencyMs]);
+
+  useEffect(() => {
+    engineRef.current?.setLatency(latencyMs);
+  }, [latencyMs]);
+
+  useEffect(() => {
+    return guitarInput.subscribe((pitch) => {
+      if (!pitch?.onset) return;
+      engineRef.current?.feedPitch(pitch.midi, performance.now(), true);
+    });
+  }, [songId]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code !== "Space") return;
+      if (!spaceAssist) return;
+      e.preventDefault();
+      const engine = engineRef.current;
+      const snap = snapRef.current;
+      if (!engine || !snap) return;
+      const pending = snap.notes.find((n) => n.status === "pending" && Math.abs(n.time - snap.currentTime) < 0.2);
+      const judge = engine.feedPractice(performance.now());
+      if (judge && judge !== "miss" && pending) {
+        pluckFret(pending.string, pending.fret, 0.16);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [spaceAssist]);
+
+  if (!song) {
+    return (
+      <div className="play-screen">
+        <p className="empty">Song not found.</p>
+        <button className="btn" onClick={onBack}>
+          Back
+        </button>
+      </div>
+    );
+  }
+
+  const start = async () => {
+    await resumeAudio();
+    engineRef.current?.start(performance.now());
+  };
+  const pause = () => engineRef.current?.pause(performance.now());
+  const restart = () => {
+    savedRef.current = false;
+    lastBeatRef.current = -99;
+    engineRef.current?.reset();
+    void start();
+  };
+  const changeSpeed = (value: number) => {
+    setSpeed(value);
+    engineRef.current?.setSpeed(value);
+  };
+  const playFret = (string: StringIndex, fret: number) => {
+    void resumeAudio();
+    pluckFret(string, fret, 0.2);
+    engineRef.current?.feedFret(string, fret, performance.now());
+  };
+
+  const snap = hud ?? engineRef.current?.snapshot();
+  const accuracy = snap?.accuracy ?? 0;
+  const highlight = detected ? bestPositionForMidi(detected.midi) : null;
+
+  return (
+    <div className="play-screen">
+      <header className="play-hud">
+        <button className="icon-btn" onClick={onBack} aria-label="Back">
+          <IconBack />
+        </button>
+        <div className="play-title">
+          <h1>{song.title}</h1>
+          <p>
+            {song.artist} · {song.bpm} BPM
+          </p>
+        </div>
+        <div className="play-stats">
+          <div>
+            <span>Score</span>
+            <strong>{snap?.score ?? 0}</strong>
+          </div>
+          <div>
+            <span>Combo</span>
+            <strong>{snap?.combo ?? 0}x</strong>
+          </div>
+          <div>
+            <span>Accuracy</span>
+            <strong>{accuracy.toFixed(0)}%</strong>
+          </div>
+        </div>
+        <div className="input-meter" title={detected ? detected.noteName : "No signal"}>
+          <span style={{ height: `${Math.min(100, (detected?.amplitude ?? 0) * 800)}%` }} />
+        </div>
+      </header>
+
+      <div className="progress-line">
+        <span
+          style={{
+            width: `${Math.max(0, Math.min(100, ((snap?.currentTime ?? 0) / song.duration) * 100))}%`,
+          }}
+        />
+      </div>
+
+      <div className="play-controls">
+        {!snap?.playing && !snap?.finished && (
+          <button className="btn primary" onClick={start}>
+            {snap && snap.currentTime > 0 ? "Resume" : "Start"}
+          </button>
+        )}
+        {snap?.playing && (
+          <button className="btn" onClick={pause}>
+            Pause
+          </button>
+        )}
+        <button className="btn" onClick={restart}>
+          Restart
+        </button>
+        <div className="speed-toggle">
+          {[0.5, 0.75, 1].map((value) => (
+            <button key={value} className={speed === value ? "on" : ""} onClick={() => changeSpeed(value)}>
+              {Math.round(value * 100)}%
+            </button>
+          ))}
+        </div>
+        <label className="check">
+          <input type="checkbox" checked={metronome} onChange={(e) => setMetronome(e.target.checked)} />
+          Click
+        </label>
+        <label className="check">
+          <input type="checkbox" checked={spaceAssist} onChange={(e) => setSpaceAssist(e.target.checked)} />
+          Space to hit
+        </label>
+        {!guitarLive && (
+          <button className="btn ghost" onClick={onConnect}>
+            Connect guitar
+          </button>
+        )}
+        {detected && (
+          <span className="heard-note">
+            Heard {detected.noteName}
+            {highlight ? ` · ${["", "e", "B", "G", "D", "A", "E"][highlight.string]}${highlight.fret}` : ""}
+          </span>
+        )}
+      </div>
+
+      <div className="fret-stage">
+        <canvas ref={canvasRef} />
+      </div>
+
+      <NeckBoard
+        notes={snap?.notes ?? song.notes.map((n) => ({ ...n, status: "pending" }))}
+        currentTime={snap?.currentTime ?? -1}
+        highlight={highlight}
+        onPlayFret={playFret}
+      />
+
+      {!guitarLive && (
+        <p className="practice-hint">
+          No guitar connected. Click the highlighted frets on the neck, or enable <b>Space to hit</b> to practice timing.
+        </p>
+      )}
+
+      {snap?.finished && (
+        <div className="results-overlay">
+          <div className="results-card">
+            <p className="eyebrow">Song complete</p>
+            <h2>{song.title}</h2>
+            <Stars value={snap.stars} />
+            <div className="results-grid">
+              <div>
+                <span>Accuracy</span>
+                <strong>{snap.accuracy.toFixed(0)}%</strong>
+              </div>
+              <div>
+                <span>Score</span>
+                <strong>{snap.score}</strong>
+              </div>
+              <div>
+                <span>Max combo</span>
+                <strong>{snap.maxCombo}</strong>
+              </div>
+            </div>
+            <p className="judge-mix">
+              Perfect {snap.counts.perfect} · Great {snap.counts.great} · Good {snap.counts.good} · Miss {snap.counts.miss}
+            </p>
+            <div className="hero-actions">
+              <button className="btn primary" onClick={restart}>
+                Play again
+              </button>
+              <button className="btn" onClick={onBack}>
+                Back to songs
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
