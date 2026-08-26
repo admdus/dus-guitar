@@ -87,6 +87,7 @@ svg { width: 1.15rem; height: 1.15rem; fill: currentColor; }
 .side-status {
   margin-top: auto;
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   align-items: center;
   color: var(--muted);
@@ -94,6 +95,16 @@ svg { width: 1.15rem; height: 1.15rem; fill: currentColor; }
   padding: 10px 12px;
   border-radius: 12px;
   background: var(--card);
+}
+.side-tuning {
+  flex-basis: 100%;
+  margin: 0;
+  padding-left: 16px;
+  font-style: normal;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  font-weight: 700;
 }
 .side-status .dot {
   width: 8px;
@@ -137,6 +148,20 @@ h2, h3 { margin: 0; }
 .hero-actions, .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .chip.on, .device.on { border-color: var(--accent); color: var(--accent); background: rgba(34,211,238,0.08); }
 .chip:disabled { opacity: 0.4; cursor: not-allowed; }
+.tuning-picks { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.tuning-picks .chip em {
+  font-style: normal;
+  font-size: 0.72rem;
+  margin-left: 8px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+.tuning-picks .chip.on em { color: var(--accent); }
+.tuning-picks.compact .chip { padding: 6px 12px; font-size: 0.85rem; }
+.tuning-picks.compact .chip em { margin-left: 6px; }
+.tuning-hint, .tuning-note { margin: 0; color: var(--muted); line-height: 1.5; max-width: 62ch; }
+.tuning-bar { display: flex; flex-direction: column; gap: 10px; }
 
 .search {
   min-width: 260px;
@@ -280,6 +305,7 @@ h2, h3 { margin: 0; }
   gap: 4px;
 }
 .string-ref em { color: var(--muted); font-style: normal; font-size: 0.78rem; }
+.string-ref.on { border-color: var(--accent); background: rgba(34,211,238,0.1); box-shadow: 0 0 0 1px rgba(34,211,238,0.35); }
 
 .setup-steps { display: flex; flex-direction: column; gap: 18px; padding: 0; }
 .setup-steps li {
@@ -355,6 +381,7 @@ h2, h3 { margin: 0; }
 .play-hud, .play-controls {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 16px;
   padding: 14px 18px;
 }

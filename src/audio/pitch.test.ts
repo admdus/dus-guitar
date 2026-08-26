@@ -18,11 +18,11 @@ describe("YIN pitch detection", () => {
     expect(result!.probability).toBeGreaterThan(0.8);
   });
 
-  it("detects low E2 (82.41 Hz)", () => {
-    const result = detectPitchYin(sine(82.41, sr, n), sr);
+  it("detects Drop D low D2 (73.42 Hz)", () => {
+    const result = detectPitchYin(sine(73.42, sr, n), sr);
     expect(result).not.toBeNull();
-    expect(result!.frequency).toBeGreaterThan(80);
-    expect(result!.frequency).toBeLessThan(85);
+    expect(result!.frequency).toBeGreaterThan(71);
+    expect(result!.frequency).toBeLessThan(76);
   });
 
   it("detects high E4 (329.63 Hz)", () => {

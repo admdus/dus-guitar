@@ -1,5 +1,6 @@
 import { STRING_COLORS, bestPositionForMidi } from "../engine/notes";
 import { isLegato } from "../engine/tab";
+import { STANDARD_TUNING, type Tuning } from "../engine/tuning";
 import type { DetectedPitch, EngineSnapshot, LiveNote, Technique } from "../types";
 
 const PLAYHEAD = 148;
@@ -12,6 +13,7 @@ export function drawFretboard(
   snap: EngineSnapshot,
   detected: DetectedPitch | null,
   bpm: number,
+  tuning: Tuning = STANDARD_TUNING,
 ) {
   ctx.clearRect(0, 0, width, height);
 
@@ -82,7 +84,7 @@ export function drawFretboard(
   }
 
   drawBall(ctx, height, snap);
-  drawDetected(ctx, height, detected);
+  drawDetected(ctx, height, detected, tuning);
 
   if (snap.playing && snap.countInBeatsLeft > 0) {
     ctx.fillStyle = "rgba(8,10,16,0.35)";
@@ -265,9 +267,9 @@ function drawBall(ctx: CanvasRenderingContext2D, height: number, snap: EngineSna
   ctx.shadowBlur = 0;
 }
 
-function drawDetected(ctx: CanvasRenderingContext2D, height: number, detected: DetectedPitch | null) {
+function drawDetected(ctx: CanvasRenderingContext2D, height: number, detected: DetectedPitch | null, tuning: Tuning) {
   if (!detected) return;
-  const pos = bestPositionForMidi(detected.midi);
+  const pos = bestPositionForMidi(detected.midi, tuning);
   if (!pos) return;
   const y = stringY(pos.string, PLAYHEAD, height);
   ctx.beginPath();

@@ -2,6 +2,7 @@ import { SongEngine } from "./playback";
 import { getSong } from "../data/songs";
 import { noteMidi } from "./notes";
 import { SONGS } from "../data/songs";
+import { DROP_D_TUNING, songForTuning } from "./tuning";
 
 describe("song library", () => {
   it("has unique ids and playable notes", () => {
@@ -93,6 +94,28 @@ describe("SongEngine", () => {
     const midi = noteMidi(venom.notes[0].string, venom.notes[0].fret);
     engine.feedPitch(midi, countIn, true);
     expect(engine.tick(countIn).counts.perfect).toBe(1);
+  });
+
+  it("scores remapped Drop D tabs from the original concert pitch", () => {
+    const spark = getSong("spark")!;
+    const drop = songForTuning(spark, DROP_D_TUNING);
+    expect(drop.notes[0].fret).toBe(2);
+    const engine = new SongEngine(drop, { tuning: DROP_D_TUNING });
+    const countIn = (60 / spark.bpm) * 4 * 1000;
+    engine.start(0);
+    const midi = noteMidi(spark.notes[0].string, spark.notes[0].fret);
+    expect(engine.feedPitch(midi, countIn, true)).toBe("perfect");
+    expect(engine.tick(countIn).notes[0].fret).toBe(2);
+  });
+
+  it("hits Drop D Venom Drive from the same E2 as standard", () => {
+    const venom = songForTuning(getSong("venom-drive")!, DROP_D_TUNING);
+    const first = venom.notes.find((n) => n.string === 6)!;
+    expect(first.fret).toBe(2);
+    const engine = new SongEngine(venom, { tuning: DROP_D_TUNING });
+    const countIn = (60 / venom.bpm) * 4 * 1000;
+    engine.start(0);
+    expect(engine.feedPitch(noteMidi(6, 0), countIn, true)).toBe("perfect");
   });
 });
 

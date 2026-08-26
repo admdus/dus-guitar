@@ -1,4 +1,5 @@
 export type StringIndex = 1 | 2 | 3 | 4 | 5 | 6;
+export type TuningId = "standard" | "drop-d";
 export type Difficulty = 1 | 2 | 3 | 4 | 5;
 export type SongCategory = "beginner" | "rock" | "folk" | "exercise" | "classical";
 export type Judge = "perfect" | "great" | "good" | "miss";
@@ -34,6 +35,8 @@ export interface Song {
   duration: number;
   cover: SongCover;
   notes: SongNote[];
+  /** Native tuning the tab was written in. Defaults to standard. */
+  tuning?: TuningId;
 }
 
 export interface DetectedPitch {

@@ -1,6 +1,6 @@
 /**
  * YIN pitch detection (de Cheveigné & Kawahara).
- * Tuned for guitar: roughly E2 (82 Hz) through E6.
+ * Tuned for guitar: roughly D2 (73 Hz, Drop D) through E6.
  */
 export interface PitchResult {
   frequency: number;
@@ -12,7 +12,7 @@ const THRESHOLD = 0.13;
 export function detectPitchYin(
   samples: ArrayLike<number>,
   sampleRate: number,
-  minHz = 70,
+  minHz = 60,
   maxHz = 1200,
 ): PitchResult | null {
   const n = samples.length;

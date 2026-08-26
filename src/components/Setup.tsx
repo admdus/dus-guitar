@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import type { GuitarStatus } from "../hooks/useGuitar";
 import { channelLabel, type CaptureInfo, type InputChannel, type InputDevice } from "../audio/devices";
 import type { DetectedPitch } from "../types";
+import type { Tuning } from "../engine/tuning";
+import { TuningPicker } from "./TuningPicker";
 
 interface Props {
   status: GuitarStatus;
@@ -11,6 +13,8 @@ interface Props {
   channel: InputChannel;
   capture: CaptureInfo | null;
   detected: DetectedPitch | null;
+  tuning: Tuning;
+  onTuning: (tuning: Tuning) => void;
   onConnect: (deviceId?: string) => void;
   onDisconnect: () => void;
   onRefresh: () => void;
@@ -25,6 +29,8 @@ export function Setup({
   channel,
   capture,
   detected,
+  tuning,
+  onTuning,
   onConnect,
   onDisconnect,
   onRefresh,
@@ -138,9 +144,11 @@ export function Setup({
         <li>
           <h3>4. Tune, then play</h3>
           <p>
-            Open the tuner if the note names look off. Then pick a song — notes scroll toward the glowing play line. Hit the
-            matching fret in rhythm.
+            Match the tuner to your guitar. Drop D rewrites every song so it still sounds the same — the low
+            string is a D, so those notes sit two frets higher and power chords become one-finger shapes.
           </p>
+          <TuningPicker value={tuning} onChange={onTuning} />
+          <p className="tuning-hint">{tuning.hint}</p>
         </li>
       </ol>
     </div>

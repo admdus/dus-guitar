@@ -1,7 +1,9 @@
 import { SONGS, songsByCategory } from "../data/songs";
 import { SongRow } from "./SongCard";
 import { Stars } from "./Icons";
+import { TuningPicker } from "./TuningPicker";
 import type { GuitarStatus } from "../hooks/useGuitar";
+import type { Tuning } from "../engine/tuning";
 import type { Song } from "../types";
 
 interface Props {
@@ -9,9 +11,11 @@ interface Props {
   onSetup: () => void;
   guitarStatus: GuitarStatus;
   scores: Record<string, { stars: number; accuracy: number }>;
+  tuning: Tuning;
+  onTuning: (tuning: Tuning) => void;
 }
 
-export function Home({ onPlay, onSetup, guitarStatus, scores }: Props) {
+export function Home({ onPlay, onSetup, guitarStatus, scores, tuning, onTuning }: Props) {
   const featured = SONGS.find((s) => s.id === "power-pulse") ?? SONGS[0];
   const continueSong = bestContinue(scores) ?? featured;
 
@@ -21,12 +25,16 @@ export function Home({ onPlay, onSetup, guitarStatus, scores }: Props) {
         <div>
           <p className="eyebrow">Today's session</p>
           <h1>Ready when you are.</h1>
+          <p className="lede">Tune the app to match the guitar — Standard or Drop D — then play any song.</p>
         </div>
-        {guitarStatus !== "live" && (
-          <button className="btn primary" onClick={onSetup}>
-            Connect guitar
-          </button>
-        )}
+        <div className="hero-actions">
+          <TuningPicker value={tuning} onChange={onTuning} />
+          {guitarStatus !== "live" && (
+            <button className="btn primary" onClick={onSetup}>
+              Connect guitar
+            </button>
+          )}
+        </div>
       </header>
 
       <div className="hero" style={{ ["--from" as string]: continueSong.cover.from, ["--to" as string]: continueSong.cover.to }}>

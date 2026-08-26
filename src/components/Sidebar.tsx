@@ -1,11 +1,13 @@
 import { IconHome, IconJack, IconLearn, IconPick, IconSongs, IconTuner } from "./Icons";
 import type { GuitarStatus } from "../hooks/useGuitar";
+import type { Tuning } from "../engine/tuning";
 import type { Page } from "../types";
 
 interface Props {
   page: Page;
   onNavigate: (page: Page) => void;
   guitarStatus: GuitarStatus;
+  tuning: Tuning;
 }
 
 const ITEMS: Array<{ name: Page["name"]; label: string; icon: typeof IconHome }> = [
@@ -16,7 +18,7 @@ const ITEMS: Array<{ name: Page["name"]; label: string; icon: typeof IconHome }>
   { name: "setup", label: "Guitar", icon: IconJack },
 ];
 
-export function Sidebar({ page, onNavigate, guitarStatus }: Props) {
+export function Sidebar({ page, onNavigate, guitarStatus, tuning }: Props) {
   return (
     <aside className="sidebar">
       <button className="brand" onClick={() => onNavigate({ name: "home" })}>
@@ -49,6 +51,7 @@ export function Sidebar({ page, onNavigate, guitarStatus }: Props) {
             : guitarStatus === "error"
               ? "Input error"
               : "No guitar yet"}
+        <em className="side-tuning">{tuning.name} · {tuning.notation}</em>
       </div>
     </aside>
   );

@@ -1,4 +1,4 @@
-import { midiToFreq, noteMidi } from "../engine/notes";
+import { midiToFreq, noteMidi, STANDARD_TUNING, type Tuning } from "../engine/notes";
 import type { StringIndex } from "../types";
 
 let shared: AudioContext | null = null;
@@ -68,8 +68,8 @@ export function pluckMidi(midi: number, when?: number, gain = 0.18) {
   noise.stop(t + 0.05);
 }
 
-export function pluckFret(string: StringIndex, fret: number, gain = 0.18) {
-  pluckMidi(noteMidi(string, fret), undefined, gain);
+export function pluckFret(string: StringIndex, fret: number, gain = 0.18, tuning: Tuning = STANDARD_TUNING) {
+  pluckMidi(noteMidi(string, fret, tuning), undefined, gain);
 }
 
 export function click(accent = false) {
