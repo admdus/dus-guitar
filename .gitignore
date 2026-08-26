@@ -1,0 +1,11 @@
+node_modules
+dist
+dist-electron
+release
+coverage
+.DS_Store
+*.log
+.vite
+.idea
+.vscode
+*.tsbuildinfo
