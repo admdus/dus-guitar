@@ -54,6 +54,14 @@ export function IconBack() {
   );
 }
 
+export function IconImport() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M11 3v10.2L8.4 10.6 7 12l5 5 5-5-1.4-1.4L13 13.2V3h-2ZM5 19v2h14v-2H5Z" />
+    </svg>
+  );
+}
+
 export function Stars({ value, size = "md" }: { value: number; size?: "sm" | "md" }) {
   return (
     <span className={`stars stars-${size}`} aria-label={`${value} of 5 stars`}>

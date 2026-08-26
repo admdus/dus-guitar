@@ -66,16 +66,34 @@ If Windows cannot open the device, close Ableton, Reaper, or other hosts using F
 
 The library mixes original riffs (`Power Pulse`, `Pentatonic Drive`, `Blue Porch`, `Venom Drive`, `Venom Coil`, `Venom Arc`, `Venom Rake`) with public-domain melodies (`Ode to Joy`, `Amazing Grace`, `The Rising Sun`). Nothing here is a licensed pop transcription.
 
+You can also **import your own audio**. DUS Guitar listens for pitches and writes a scrolling fretboard track — the same format as the built-in songs.
+
+### Import an MP3 (or WAV / M4A / JSON)
+
+**In the app:** Songs → **Import audio**. Drop a recording. Isolated guitar, a DI riff, or a hummed melody works best. Full-band commercial mixes usually hide the guitar, so the tab will be rough or empty.
+
+**From the command line** (needs [ffmpeg](https://ffmpeg.org/)):
+
+```bash
+npm run import-mp3 -- path/to/riff.mp3
+npm run import-mp3 -- path/to/riff.mp3 --bpm 120 --title "Porch Riff" -o porch.dus.json
+```
+
+That writes a `.dus.json` song file. Import that JSON from the same Songs button if you want to transcribe on the command line and play in the app.
+
+The importer is monophonic: one note at a time, mapped onto standard-tuning positions. It does **not** store the MP3, and it is not a licensed transcription tool.
+
 `Venom Drive` is an original metalcore chug — palm-muted E5, then G5, C5 and D5. Switch the app to Drop D and the same riff uses one-finger power chords. `Venom Coil` is the advanced metal trainer: notes marked **h** are hammer-ons and **p** are pull-offs. Pick the first note of a slur, then hammer or pull on the same string without picking again. `Venom Arc` trains metal arpeggios: pick one note at a time through Em, C, G and D shapes, then sixteenth-note sweeps (including B diminished and a 7th-position Em). `Venom Rake` is the sweep-picking trainer: one note per adjacent string through 5-string Em, C and B diminished (eighths, then quintuplets), 6-string Em sextuplets, and a hammer-on at the peak of the Em shape.
 
 ## Scripts
 
 | Command | Purpose |
 | --- | --- |
-| `npm test` | Pitch detection, scoring, and song-engine tests |
+| `npm test` | Pitch detection, scoring, song-engine, and import tests |
 | `npm run typecheck` | TypeScript |
 | `npm run build` | Renderer + Electron main process |
 | `npm run dist:win` | Windows NSIS installer |
+| `npm run import-mp3 -- file.mp3` | Transcribe audio to a `.dus.json` practice track |
 
 ## License
 

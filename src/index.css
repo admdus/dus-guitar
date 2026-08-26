@@ -163,6 +163,62 @@ h2, h3 { margin: 0; }
 .tuning-hint, .tuning-note { margin: 0; color: var(--muted); line-height: 1.5; max-width: 62ch; }
 .tuning-bar { display: flex; flex-direction: column; gap: 10px; }
 
+.page-head-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.page-head-actions .btn { display: inline-flex; align-items: center; gap: 8px; }
+.song-card-wrap { position: relative; }
+.song-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 0;
+  background: rgba(8, 10, 16, 0.7);
+  color: #fff;
+  font-size: 1.1rem;
+  line-height: 1;
+  z-index: 1;
+}
+.song-remove:hover { background: #fb7185; color: #0b0d14; }
+.import-card { width: min(520px, calc(100vw - 32px)); text-align: left; }
+.import-card h2 { margin-bottom: 12px; }
+.import-card .hero-actions { justify-content: flex-end; }
+.import-drop {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+  margin: 12px 0 18px;
+  padding: 20px;
+  border: 1px dashed rgba(148, 163, 184, 0.35);
+  border-radius: 18px;
+  background: rgba(34, 211, 238, 0.04);
+  color: inherit;
+}
+.import-drop span { color: var(--muted); font-size: 0.9rem; }
+.import-drop.over { border-color: var(--accent); background: rgba(34, 211, 238, 0.12); }
+.import-status { color: var(--muted); }
+.import-progress { margin: 12px 0 20px; border-radius: 999px; overflow: hidden; }
+.import-preview { display: flex; flex-direction: column; gap: 12px; margin: 12px 0 8px; }
+.import-preview label { display: flex; flex-direction: column; gap: 6px; color: var(--muted); font-size: 0.82rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.import-preview input {
+  background: var(--card-2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.import-stats { margin: 0; color: var(--accent); font-weight: 700; }
+.import-warning { margin: 0; color: #fde68a; background: rgba(250, 204, 21, 0.1); border-radius: 12px; padding: 10px 12px; }
+
 .search {
   min-width: 260px;
   background: var(--card);

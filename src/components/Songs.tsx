@@ -1,8 +1,11 @@
 import { useMemo, useState } from "react";
 import { SONGS } from "../data/songs";
+import { deleteImportedSong, loadImportedSongs } from "../data/library";
 import { SongCard } from "./SongCard";
+import { ImportSong } from "./ImportSong";
 import { TuningPicker } from "./TuningPicker";
 import type { Tuning } from "../engine/tuning";
+import type { Song } from "../types";
 
 interface Props {
   onPlay: (id: string) => void;
@@ -11,15 +14,18 @@ interface Props {
   onTuning: (tuning: Tuning) => void;
 }
 
-const FILTERS = ["All", "Beginner", "Rock", "Metal", "Folk", "Classical", "Exercise"] as const;
+const FILTERS = ["All", "Imported", "Beginner", "Rock", "Metal", "Folk", "Classical", "Exercise"] as const;
 
 export function Songs({ onPlay, scores, tuning, onTuning }: Props) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
+  const [imported, setImported] = useState<Song[]>(() => loadImportedSongs());
+
+  const catalog = useMemo(() => [...imported, ...SONGS], [imported]);
 
   const list = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return SONGS.filter((song) => {
+    return catalog.filter((song) => {
       const matchesQuery =
         !q ||
         song.title.toLowerCase().includes(q) ||
@@ -28,6 +34,7 @@ export function Songs({ onPlay, scores, tuning, onTuning }: Props) {
       const matchesFilter =
         filter === "All" ||
         song.genre === filter ||
+        (filter === "Imported" && Boolean(song.imported)) ||
         (filter === "Beginner" && song.category === "beginner") ||
         (filter === "Exercise" && song.category === "exercise") ||
         (filter === "Rock" && song.category === "rock") ||
@@ -36,7 +43,7 @@ export function Songs({ onPlay, scores, tuning, onTuning }: Props) {
         (filter === "Classical" && song.category === "classical");
       return matchesQuery && matchesFilter;
     });
-  }, [query, filter]);
+  }, [query, filter, catalog]);
 
   return (
     <div className="page">
@@ -45,6 +52,8 @@ export function Songs({ onPlay, scores, tuning, onTuning }: Props) {
           <p className="eyebrow">Library</p>
           <h1>Songs</h1>
         </div>
+        <div className="page-head-actions">
+          <ImportSong onImported={() => setImported(loadImportedSongs())} />
           <input
             className="search"
             name="song-search"
@@ -52,6 +61,7 @@ export function Songs({ onPlay, scores, tuning, onTuning }: Props) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
+        </div>
       </header>
       <div className="filters">
         {FILTERS.map((item) => (
@@ -71,10 +81,29 @@ export function Songs({ onPlay, scores, tuning, onTuning }: Props) {
       </div>
       <div className="song-grid">
         {list.map((song) => (
-          <SongCard key={song.id} song={song} stars={scores[song.id]?.stars ?? 0} onPlay={onPlay} />
+          <SongCard
+            key={song.id}
+            song={song}
+            stars={scores[song.id]?.stars ?? 0}
+            onPlay={onPlay}
+            onRemove={
+              song.imported
+                ? (id) => {
+                    deleteImportedSong(id);
+                    setImported(loadImportedSongs());
+                  }
+                : undefined
+            }
+          />
         ))}
       </div>
-      {list.length === 0 && <p className="empty">No songs match that search.</p>}
+      {list.length === 0 && (
+        <p className="empty">
+          {filter === "Imported"
+            ? "No imported tracks yet. Drop an MP3 of isolated guitar — or a .dus.json from npm run import-mp3."
+            : "No songs match that search."}
+        </p>
+      )}
     </div>
   );
 }

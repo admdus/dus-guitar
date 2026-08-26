@@ -1,5 +1,5 @@
 import { comboMultiplier, hitAccuracy, judgeTiming, pointsFor } from "./score";
-import { midiToFreq, midiToName, noteMidi, pitchMatches, starsForAccuracy } from "./notes";
+import { midiToFreq, midiToName, noteMidi, pitchMatches, preferPlayablePosition, starsForAccuracy } from "./notes";
 import { DROP_D_TUNING } from "./tuning";
 
 describe("timing windows", () => {
@@ -48,5 +48,12 @@ describe("guitar notes", () => {
     expect(pitchMatches(40, 40.1)).toBe(true);
     expect(pitchMatches(40, 52.05)).toBe(true);
     expect(pitchMatches(40, 42)).toBe(false);
+  });
+
+  it("walks the low E string instead of jumping to a distant fingering", () => {
+    const openE = preferPlayablePosition(40, null);
+    expect(openE).toEqual({ string: 6, fret: 0 });
+    expect(preferPlayablePosition(42, openE)).toEqual({ string: 6, fret: 2 });
+    expect(preferPlayablePosition(43, { string: 6, fret: 2 })).toEqual({ string: 6, fret: 3 });
   });
 });

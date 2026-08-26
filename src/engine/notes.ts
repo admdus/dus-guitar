@@ -62,17 +62,56 @@ export function pitchMatches(expectedMidi: number, detectedMidi: number, centsTo
   );
 }
 
+export function positionsForMidi(
+  midi: number,
+  tuning: Tuning = STANDARD_TUNING,
+  maxFret = 15,
+): Array<{ string: StringIndex; fret: number }> {
+  const target = Math.round(midi);
+  const out: Array<{ string: StringIndex; fret: number }> = [];
+  for (let s = 1; s <= 6; s++) {
+    const fret = target - tuning.openMidi[s];
+    if (fret >= 0 && fret <= maxFret) {
+      out.push({ string: s as StringIndex, fret });
+    }
+  }
+  return out;
+}
+
 export function bestPositionForMidi(
   midi: number,
   tuning: Tuning = STANDARD_TUNING,
 ): { string: StringIndex; fret: number } | null {
-  const target = Math.round(midi);
-  let best: { string: StringIndex; fret: number } | null = null;
-  for (let s = 1; s <= 6; s++) {
-    const fret = target - tuning.openMidi[s];
-    if (fret < 0 || fret > 15) continue;
-    if (!best || fret < best.fret) {
-      best = { string: s as StringIndex, fret };
+  const cands = positionsForMidi(midi, tuning, 15);
+  if (cands.length === 0) return null;
+  return cands.reduce((best, pos) => (pos.fret < best.fret ? pos : best));
+}
+
+/**
+ * Pick a guitar fingering that stays close to the previous note so imported
+ * melodies walk the neck instead of jumping to a random lowest-fret option.
+ */
+export function preferPlayablePosition(
+  midi: number,
+  previous: { string: StringIndex; fret: number } | null = null,
+  tuning: Tuning = STANDARD_TUNING,
+): { string: StringIndex; fret: number } | null {
+  let cands = positionsForMidi(midi, tuning, 15);
+  if (cands.length === 0) cands = positionsForMidi(midi, tuning, 19);
+  if (cands.length === 0) cands = positionsForMidi(midi, tuning, 24);
+  if (cands.length === 0) return null;
+  if (!previous) return cands.reduce((best, pos) => (pos.fret < best.fret ? pos : best));
+
+  let best = cands[0];
+  let bestScore = Infinity;
+  for (const pos of cands) {
+    const stringDist = Math.abs(pos.string - previous.string);
+    const fretDist = Math.abs(pos.fret - previous.fret);
+    let score = stringDist * 4 + fretDist * 1.15 + pos.fret * 0.2;
+    if (stringDist === 0 && fretDist <= 5) score -= 2.5;
+    if (score < bestScore) {
+      bestScore = score;
+      best = pos;
     }
   }
   return best;

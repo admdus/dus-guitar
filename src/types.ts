@@ -37,6 +37,9 @@ export interface Song {
   notes: SongNote[];
   /** Native tuning the tab was written in. Defaults to standard. */
   tuning?: TuningId;
+  /** True when this track was imported from audio or a song JSON file. */
+  imported?: boolean;
+  sourceName?: string;
 }
 
 export interface DetectedPitch {

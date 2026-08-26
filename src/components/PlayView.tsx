@@ -32,11 +32,10 @@ export function PlayView({
   onBack,
   onConnect,
 }: Props) {
-  const catalogSong = getSong(songId);
-  const song = useMemo(
-    () => (catalogSong ? songForTuning(catalogSong, tuning) : undefined),
-    [catalogSong, tuning],
-  );
+  const song = useMemo(() => {
+    const catalogSong = getSong(songId);
+    return catalogSong ? songForTuning(catalogSong, tuning) : undefined;
+  }, [songId, tuning]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<SongEngine | null>(null);
   const snapRef = useRef<EngineSnapshot | null>(null);
