@@ -1,5 +1,5 @@
 import type { Song } from "../types";
-import { fromBeats, legatoPhrase, loopBar, shiftBeats, songDuration, asTabEvent, type BeatEvent, type BeatTuple } from "../engine/tab";
+import { fromBeats, legatoPhrase, loopBar, shiftBeats, songDuration, asTabEvent, arpeggioSweep, type BeatEvent, type BeatTuple, type ArpeggioShape } from "../engine/tab";
 
 function makeSong(
   song: Omit<Song, "notes" | "duration"> & { events: BeatEvent[] },
@@ -475,6 +475,72 @@ const venomCoilEvents: BeatEvent[] = [
   ...shiftBeats(venomCoilFinale, 40),
 ];
 
+// Original metal arpeggio trainer — pick every note across adjacent strings.
+// Em / C / G / D triads, a B diminished color, then 7th-position Em.
+// Not a transcription of any licensed song.
+const EM_ARP: ArpeggioShape = [
+  [4, 2],
+  [3, 0],
+  [2, 0],
+  [1, 0],
+];
+const C_ARP: ArpeggioShape = [
+  [5, 3],
+  [4, 2],
+  [3, 0],
+  [2, 1],
+];
+const G_ARP: ArpeggioShape = [
+  [6, 3],
+  [5, 2],
+  [4, 0],
+  [3, 0],
+];
+const D_ARP: ArpeggioShape = [
+  [4, 0],
+  [3, 2],
+  [2, 3],
+  [1, 2],
+];
+const BDIM_ARP: ArpeggioShape = [
+  [5, 2],
+  [4, 3],
+  [3, 4],
+  [2, 3],
+];
+const EM7_ARP: ArpeggioShape = [
+  [5, 7],
+  [4, 5],
+  [3, 4],
+  [2, 5],
+];
+
+const venomArcEvents: BeatEvent[] = [
+  // Eighth-note Em — learn the four-note shape slowly
+  ...arpeggioSweep(0, EM_ARP, 0.5),
+  ...arpeggioSweep(4, EM_ARP, 0.5),
+  // Walk C, G, D, Em — up only, still eighths
+  ...arpeggioSweep(8, C_ARP, 0.5, false),
+  ...arpeggioSweep(10, G_ARP, 0.5, false),
+  ...arpeggioSweep(12, D_ARP, 0.5, false),
+  ...arpeggioSweep(14, EM_ARP, 0.5, false),
+  // Sixteenth-note Em sweeps
+  ...arpeggioSweep(16, EM_ARP, 0.25),
+  ...arpeggioSweep(18, EM_ARP, 0.25),
+  ...arpeggioSweep(20, EM_ARP, 0.25),
+  ...arpeggioSweep(22, EM_ARP, 0.25),
+  // Progression sixteenths, including B diminished
+  ...arpeggioSweep(24, C_ARP, 0.25),
+  ...arpeggioSweep(26, G_ARP, 0.25),
+  ...arpeggioSweep(28, BDIM_ARP, 0.25),
+  ...arpeggioSweep(30, EM_ARP, 0.25),
+  // 7th-position Em, then resolve on open low E
+  ...arpeggioSweep(32, EM7_ARP, 0.25),
+  ...arpeggioSweep(34, EM7_ARP, 0.25),
+  ...arpeggioSweep(36, EM_ARP, 0.25, false),
+  { beat: 37, string: 6, fret: 0, duration: 2.8 },
+];
+
 export const SONGS: Song[] = [
   makeSong({
     id: "spark",
@@ -634,6 +700,19 @@ export const SONGS: Song[] = [
     cover: { from: "#4c0519", to: "#6d28d9", motif: "slash" },
     events: venomCoilEvents,
   }),
+  makeSong({
+    id: "venom-arc",
+    title: "Venom Arc",
+    artist: "DUS Studio",
+    difficulty: 4,
+    bpm: 96,
+    genre: "Metal",
+    category: "rock",
+    description:
+      "Original metal arpeggio trainer. Pick one note at a time through Em, C, G and D — eighths first, then sixteenth-note sweeps, a B diminished color, and a 7th-position Em. Not a transcription.",
+    cover: { from: "#9a3412", to: "#1e1b4b", motif: "slash" },
+    events: venomArcEvents,
+  }),
 ];
 
 export const LEARN_PATH = [
@@ -645,6 +724,7 @@ export const LEARN_PATH = [
   { songId: "pentatonic-drive", title: "Rock vocabulary", blurb: "The minor pentatonic box used in countless riffs." },
   { songId: "venom-drive", title: "Metalcore chugs", blurb: "Palm-mute E5 eighths, then hit G5, C5 and D5." },
   { songId: "venom-coil", title: "Hammer-ons & pull-offs", blurb: "Pick once, then hammer (h) and pull (p) on the same string." },
+  { songId: "venom-arc", title: "Metal arpeggios", blurb: "Pick across the strings through Em, C, G and D, then sweep sixteenths." },
 ] as const;
 
 export function getSong(id: string): Song | undefined {

@@ -113,6 +113,20 @@ describe("Venom metal trainers", () => {
     expect(pulls.length).toBeGreaterThan(8);
     expect(hammers.every((n) => n.chordGroup === undefined)).toBe(true);
   });
+
+  it("includes Venom Arc as picked metal arpeggios", () => {
+    const song = getSong("venom-arc")!;
+    expect(song.genre).toBe("Metal");
+    expect(song.bpm).toBe(96);
+    expect(song.difficulty).toBe(4);
+    expect(song.notes.length).toBeGreaterThan(80);
+    expect(song.notes.every((n) => n.chordGroup === undefined)).toBe(true);
+    expect(song.notes.every((n) => n.technique === undefined)).toBe(true);
+    const stringChanges = song.notes.filter((n, i) => i > 0 && n.string !== song.notes[i - 1].string).length;
+    expect(stringChanges).toBeGreaterThan(60);
+    const strings = new Set(song.notes.map((n) => n.string));
+    expect(strings.size).toBeGreaterThanOrEqual(5);
+  });
 });
 
 describe("legato scoring", () => {
