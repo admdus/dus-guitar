@@ -75,7 +75,7 @@ export function ImportSong({ onImported }: Props) {
         setWarning(
           "This mix looks busy. Isolated guitar, a hummed melody, or a DI riff transcribes much more cleanly than a full-band MP3.",
         );
-      } else if (result.song.notes.length < 6) {
+      } else if (result.song.duration > 12 && result.song.notes.length < 8) {
         setWarning("Only a few notes came through. Try a clearer recording, or import a .dus.json from the CLI.");
       }
       setPreview(result.song);

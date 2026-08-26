@@ -3,15 +3,31 @@ import { parseSongJson } from "../engine/transcribe";
 
 const IMPORT_KEY = "dus-guitar-imported-songs";
 
+let cached: Song[] | null = null;
+let cachedRaw: string | null = null;
+
 export function loadImportedSongs(): Song[] {
   try {
-    const raw = globalThis.localStorage?.getItem(IMPORT_KEY);
-    if (!raw) return [];
+    const raw = globalThis.localStorage?.getItem(IMPORT_KEY) ?? null;
+    if (!raw) {
+      cached = [];
+      cachedRaw = null;
+      return cached;
+    }
+    if (cached && cachedRaw === raw) return cached;
     const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map((item) => parseSongJson(item));
+    if (!Array.isArray(parsed)) {
+      cached = [];
+      cachedRaw = raw;
+      return cached;
+    }
+    cached = parsed.map((item) => parseSongJson(item));
+    cachedRaw = raw;
+    return cached;
   } catch {
-    return [];
+    cached = [];
+    cachedRaw = null;
+    return cached;
   }
 }
 
@@ -32,9 +48,12 @@ export function findImportedSong(id: string): Song | undefined {
 }
 
 function persist(songs: Song[]) {
+  const raw = JSON.stringify(songs);
   try {
-    globalThis.localStorage?.setItem(IMPORT_KEY, JSON.stringify(songs));
+    globalThis.localStorage?.setItem(IMPORT_KEY, raw);
   } catch {
     throw new Error("Could not save the imported song (storage is full or blocked).");
   }
+  cached = songs;
+  cachedRaw = raw;
 }

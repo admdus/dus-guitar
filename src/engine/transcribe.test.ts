@@ -95,6 +95,7 @@ describe("import helpers", () => {
       title: "Porch Riff",
     });
     expect(metaFromFilename("open_roads.wav").title).toBe("Open Roads");
+    expect(metaFromFilename("open-check.mp3").title).toBe("Open Check");
   });
 
   it("round-trips song JSON and marks it imported", () => {

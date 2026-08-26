@@ -30,6 +30,9 @@ describe("imported song library", () => {
     saveImportedSong(stubSong("import-a", "A"));
     expect(findImportedSong("import-a")?.title).toBe("A");
     saveImportedSong(stubSong("import-b", "B"));
+    const first = findImportedSong("import-b");
+    const second = findImportedSong("import-b");
+    expect(first).toBe(second);
     expect(loadImportedSongs()).toHaveLength(2);
     deleteImportedSong("import-a");
     expect(findImportedSong("import-a")).toBeUndefined();

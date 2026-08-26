@@ -105,11 +105,7 @@ export async function transcribe(
 }
 
 export function metaFromFilename(filename: string): { title: string; artist: string } {
-  const base = filename
-    .replace(/^.*[/\\]/, "")
-    .replace(/\.[^.]+$/, "")
-    .replace(/[_]+/g, " ")
-    .trim();
+  const base = filename.replace(/^.*[/\\]/, "").replace(/\.[^.]+$/, "").trim();
   const parts = base.split(/\s+-\s+/);
   if (parts.length >= 2) {
     return {
@@ -405,6 +401,7 @@ function importedSongId(title: string): string {
 
 function prettyWords(value: string): string {
   return value
+    .replace(/[-_]+/g, " ")
     .split(/\s+/)
     .filter(Boolean)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
