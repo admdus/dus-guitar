@@ -115,3 +115,26 @@ export function legatoPhrase(
   }
   return events;
 }
+
+export type ArpeggioShape = Array<[string: number, fret: number]>;
+
+/**
+ * Cross-string arpeggio. Every note is picked (not legato).
+ * `shape` runs bass toward treble. When `turnaround` is true the shape
+ * comes back down, doubling the peak so 4-note shapes fill 8 slots.
+ */
+export function arpeggioSweep(
+  startBeat: number,
+  shape: ArpeggioShape,
+  step: number,
+  turnaround = true,
+): TabEvent[] {
+  if (shape.length === 0) return [];
+  const path = turnaround ? [...shape, ...[...shape].reverse()] : [...shape];
+  return path.map(([string, fret], i) => ({
+    beat: startBeat + i * step,
+    string,
+    fret,
+    duration: step * 0.9,
+  }));
+}
