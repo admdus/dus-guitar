@@ -77,6 +77,23 @@ describe("SongEngine", () => {
     expect(same.length).toBeGreaterThan(1);
     expect(same.every((n) => n.status === "perfect")).toBe(true);
   });
+
+  it("loads the metalcore trainer as two-string power chords", () => {
+    const venom = getSong("venom-drive")!;
+    expect(venom.genre).toBe("Metal");
+    expect(venom.bpm).toBe(120);
+    expect(venom.notes.length).toBeGreaterThan(40);
+    const firstGroup = venom.notes[0].chordGroup;
+    const firstChord = venom.notes.filter((n) => n.chordGroup === firstGroup);
+    expect(firstChord).toHaveLength(2);
+    expect(firstChord.map((n) => n.string).sort()).toEqual([5, 6]);
+    const engine = new SongEngine(venom);
+    const countIn = (60 / venom.bpm) * 4 * 1000;
+    engine.start(0);
+    const midi = noteMidi(venom.notes[0].string, venom.notes[0].fret);
+    engine.feedPitch(midi, countIn, true);
+    expect(engine.tick(countIn).counts.perfect).toBe(1);
+  });
 });
 
 describe("Venom metal trainers", () => {
