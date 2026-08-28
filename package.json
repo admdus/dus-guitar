@@ -13,6 +13,7 @@
     "build": "tsc --noEmit && vite build",
     "dist": "npm run build && electron-builder",
     "dist:win": "npm run build && electron-builder --win nsis",
+    "dist:mac": "npm run build && electron-builder --mac",
     "preview": "WEB_ONLY=1 vite preview --host 0.0.0.0 --port 5173",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -56,7 +57,39 @@
           ]
         }
       ],
-      "icon": "public/icon.png"
+      "icon": "build/icon.png"
+    },
+    "mac": {
+      "category": "public.app-category.music",
+      "icon": "build/icon.png",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "darkModeSupport": true,
+      "identity": null,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "DUS Guitar listens to your guitar through a USB interface or microphone so it can score pitch and timing.",
+        "NSAudioCaptureUsageDescription": "DUS Guitar captures audio from your guitar interface to follow notes on the fretboard."
+      }
+    },
+    "dmg": {
+      "title": "${productName}",
+      "artifactName": "${productName}-${version}-mac-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,

@@ -1,6 +1,6 @@
 # DUS Guitar
 
-A Windows desktop app for learning guitar songs. Plug in a guitar, pick a track, and play the notes as they reach the glowing **PLAY** line on a scrolling fretboard — the same kind of game-like trainer as Yousician.
+A Windows and macOS desktop app for learning guitar songs. Plug in a guitar, pick a track, and play the notes as they reach the glowing **PLAY** line on a scrolling fretboard — the same kind of game-like trainer as Yousician.
 
 ## What it does
 
@@ -10,6 +10,34 @@ A Windows desktop app for learning guitar songs. Plug in a guitar, pick a track,
 - **Score timing and pitch** — Perfect / Great / Good / Miss, combo, accuracy, and stars
 - **Tune** to standard EADGBE or Drop D (DADGBE) before you play
 - **Practice without a guitar** by clicking the neck diagram or using Space
+
+## Install on macOS
+
+1. Install [Node.js 20+](https://nodejs.org/).
+2. In this folder:
+
+```bash
+npm install
+npm run dist:mac
+```
+
+3. Open the DMG in `release/` and drag **DUS Guitar** to Applications.
+
+The first launch of an unsigned build is blocked by Gatekeeper. Right-click the app, choose **Open**, then confirm. You can also clear the quarantine flag:
+
+```bash
+xattr -cr "/Applications/DUS Guitar.app"
+```
+
+Apple Silicon and Intel Macs are both covered by the universal build.
+
+During development:
+
+```bash
+npm run electron
+```
+
+`npm run dev` runs the same UI in a browser (useful for layout work; guitar input still uses the microphone permission).
 
 ## Install on Windows
 
@@ -22,14 +50,6 @@ npm run dist:win
 ```
 
 3. Open the installer in `release/` (`DUS Guitar Setup 1.0.0.exe`), then launch **DUS Guitar** from the Start menu or desktop shortcut.
-
-During development:
-
-```bash
-npm run electron
-```
-
-`npm run dev` runs the same UI in a browser (useful for layout work; guitar input still uses the microphone permission).
 
 ## How to play
 
@@ -44,15 +64,16 @@ Speed can be 50%, 75%, or 100%. Turn **Click** on for a metronome. **Space to hi
 
 ## Input tips
 
-- Turn off echo cancellation / “enhancements” on the Windows recording device if the pitch is unstable.
+- Turn off echo cancellation / “enhancements” on the recording device if the pitch is unstable.
 - If hits feel late, raise **Input latency** on the Guitar page (try 20–80 ms).
 - YIN pitch detection is monophonic: single notes score exactly; chords count as a hit if any note in the shape is picked on time.
+- On a Mac, if the input list is empty after you click **Enable input**, open **System Settings → Privacy & Security → Microphone** and allow DUS Guitar.
 
 ## Focusrite Scarlett 2i2
 
-Yes — DUS Guitar is built to use a Scarlett 2i2 (2nd, 3rd, or 4th gen) on Windows.
+Yes — DUS Guitar is built to use a Scarlett 2i2 (2nd, 3rd, or 4th gen) on Windows and macOS.
 
-The desktop app talks to the interface through WASAPI (the same path Chromium uses). You do **not** need the Focusrite ASIO driver for this app, and a DAW that has ASIO exclusive access will block it.
+The desktop app talks to the interface through the same path Chromium uses: **Core Audio** on a Mac, **WASAPI** on Windows. You do **not** need the Focusrite ASIO driver, and a DAW that has exclusive access will block it.
 
 1. Plug the guitar into **Input 1** and press **INST**.
 2. Set **GAIN 1** so the halo stays green when you pick (red means clipping).
@@ -60,7 +81,7 @@ The desktop app talks to the interface through WASAPI (the same path Chromium us
 4. Leave the channel on **Input 1 · Guitar / INST** unless the guitar is in Input 2.
 5. Pick an open string. The meter should jump and a note name should appear.
 
-If Windows cannot open the device, close Ableton, Reaper, or other hosts using Focusrite ASIO, then Reconnect. In Focusrite Control or Windows Sound, 44.1 kHz or 48 kHz is the most reliable shared-mode rate.
+If the device will not open, close Logic Pro, GarageBand, Ableton, Reaper, or other hosts using the Scarlett exclusively, then Reconnect. In Focusrite Control, Audio MIDI Setup (Mac), or Windows Sound, 44.1 kHz or 48 kHz is the most reliable shared-mode rate.
 
 ## Songs
 
@@ -92,6 +113,7 @@ The importer is monophonic: one note at a time, mapped onto standard-tuning posi
 | `npm test` | Pitch detection, scoring, song-engine, and import tests |
 | `npm run typecheck` | TypeScript |
 | `npm run build` | Renderer + Electron main process |
+| `npm run dist:mac` | Universal macOS DMG + zip |
 | `npm run dist:win` | Windows NSIS installer |
 | `npm run import-mp3 -- file.mp3` | Transcribe audio to a `.dus.json` practice track |
 

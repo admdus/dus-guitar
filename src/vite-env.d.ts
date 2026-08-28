@@ -7,6 +7,7 @@ interface DusDesktop {
     chrome?: string;
     node?: string;
   };
+  requestMicrophoneAccess?: () => Promise<boolean>;
 }
 
 interface Window {
