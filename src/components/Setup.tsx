@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import type { GuitarStatus } from "../hooks/useGuitar";
-import { channelLabel, type CaptureInfo, type InputChannel, type InputDevice } from "../audio/devices";
+import { channelLabel, setupHints, type CaptureInfo, type InputChannel, type InputDevice } from "../audio/devices";
 import type { DetectedPitch } from "../types";
 import type { Tuning } from "../engine/tuning";
 import { TuningPicker } from "./TuningPicker";
@@ -46,6 +46,7 @@ export function Setup({
   const selected = devices.find((device) => device.deviceId === deviceId);
   const scarlettLive = selected?.kind === "scarlett" || /scarlett|focusrite/i.test(capture?.label ?? "");
   const monoOnly = (capture?.channelCount ?? 2) < 2;
+  const hints = setupHints();
 
   return (
     <div className="page setup-page">
@@ -65,7 +66,7 @@ export function Setup({
           <h3>1. Choose the interface</h3>
           <p>Select the Scarlett (or another input). Skip Loopback — that mixes computer playback, not the guitar.</p>
           {devices.length === 0 && (
-            <p className="empty">No inputs yet. Plug in the Scarlett, click Enable input so Windows grants microphone access, then Refresh.</p>
+            <p className="empty">{hints.emptyDevices}</p>
           )}
           {recommended.length > 0 && (
             <DeviceGroup title="Recommended · Focusrite" devices={recommended} deviceId={deviceId} onConnect={onConnect} />
@@ -96,7 +97,7 @@ export function Setup({
             </button>
           </div>
           {monoOnly && status === "live" && (
-            <p className="empty">This endpoint is reporting one channel, so Input 1 is the guitar. That is normal for some WASAPI views of the 2i2.</p>
+            <p className="empty">{hints.monoCapture}</p>
           )}
           <div className="hero-actions">
             <button className="btn primary" onClick={() => onConnect(deviceId)}>
@@ -127,8 +128,8 @@ export function Setup({
             <li>Press <strong>INST</strong> so the instrument pad is on. Leave AIR off unless you want extra brightness.</li>
             <li>Turn <strong>GAIN 1</strong> until the halo is green when you pick; back off if it turns red (clipping wrecks pitch detection).</li>
             <li>48V is only for condenser mics on Input 2. Leave it off for a guitar.</li>
-            <li>Direct Monitor lets you hear yourself with no software delay. The app still captures Input 1 over WASAPI.</li>
-            <li>Close Ableton, Reaper, or other hosts that hold the Focusrite <strong>ASIO</strong> driver, or Windows will refuse the input.</li>
+            <li>{hints.monitorPath}</li>
+            <li>{hints.exclusiveAccess}</li>
           </ul>
         </li>
         <li>

@@ -5,6 +5,7 @@ import {
   preferGuitarDevice,
   processingOffConstraints,
   rankInputDevices,
+  setupHints,
   toInputDevice,
 } from "./devices";
 
@@ -19,6 +20,8 @@ describe("Scarlett / Focusrite device classification", () => {
   it("keeps loopback mixes out of the guitar path", () => {
     expect(classifyInputLabel("Loopback 1-2 (Focusrite USB Audio)")).toBe("loopback");
     expect(classifyInputLabel("Scarlett 2i2 4th Gen Loopback")).toBe("loopback");
+    expect(classifyInputLabel("BlackHole 2ch")).toBe("loopback");
+    expect(classifyInputLabel("Soundflower (2ch)")).toBe("loopback");
   });
 
   it("ranks Scarlett analog first and loopback last", () => {
@@ -70,9 +73,34 @@ describe("capture constraints", () => {
     }
   });
 
-  it("maps WASAPI / ASIO lock errors to a Scarlett-specific hint", () => {
-    expect(describeCaptureError({ name: "NotReadableError", message: "Could not start audio source" })).toMatch(/ASIO/i);
-    expect(describeCaptureError({ name: "OverconstrainedError", message: "overconstrained" })).toMatch(/48 kHz/i);
-    expect(describeCaptureError({ name: "NotFoundError", message: "not found" })).toMatch(/Scarlett 2i2/i);
+  it("maps Windows WASAPI / ASIO lock errors to a Scarlett-specific hint", () => {
+    expect(describeCaptureError({ name: "NotReadableError", message: "Could not start audio source" }, "win32")).toMatch(/ASIO/i);
+    expect(describeCaptureError({ name: "OverconstrainedError", message: "overconstrained" }, "win32")).toMatch(/Windows Sound/i);
+    expect(describeCaptureError({ name: "NotFoundError", message: "not found" }, "win32")).toMatch(/Windows/i);
+  });
+
+  it("maps macOS Core Audio errors to System Settings and DAW hints", () => {
+    expect(describeCaptureError({ name: "NotAllowedError" }, "darwin")).toMatch(/System Settings/i);
+    expect(describeCaptureError({ name: "NotReadableError", message: "Could not start audio source" }, "darwin")).toMatch(/Core Audio/i);
+    expect(describeCaptureError({ name: "NotReadableError", message: "Could not start audio source" }, "darwin")).toMatch(/Logic Pro|GarageBand/i);
+    expect(describeCaptureError({ name: "OverconstrainedError", message: "overconstrained" }, "darwin")).toMatch(/Audio MIDI Setup/i);
+    expect(describeCaptureError({ name: "NotFoundError", message: "not found" }, "darwin")).toMatch(/macOS/i);
+  });
+});
+
+describe("setup hints", () => {
+  it("talks about Core Audio and macOS permission on darwin", () => {
+    const hints = setupHints("darwin");
+    expect(hints.emptyDevices).toMatch(/macOS/i);
+    expect(hints.monoCapture).toMatch(/Core Audio/i);
+    expect(hints.monitorPath).toMatch(/Core Audio/i);
+    expect(hints.exclusiveAccess).toMatch(/Logic Pro|GarageBand/i);
+  });
+
+  it("keeps WASAPI / ASIO language on Windows", () => {
+    const hints = setupHints("win32");
+    expect(hints.emptyDevices).toMatch(/Windows/i);
+    expect(hints.monoCapture).toMatch(/WASAPI/i);
+    expect(hints.exclusiveAccess).toMatch(/ASIO/i);
   });
 });

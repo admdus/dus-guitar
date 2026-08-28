@@ -428,6 +428,30 @@ h2, h3 { margin: 0; }
 }
 .latency-field input { width: 180px; }
 
+html[data-platform="darwin"] .sidebar {
+  padding-top: 52px;
+  -webkit-app-region: drag;
+}
+html[data-platform="darwin"] .sidebar button,
+html[data-platform="darwin"] .sidebar nav,
+html[data-platform="darwin"] .side-status {
+  -webkit-app-region: no-drag;
+}
+html[data-platform="darwin"] .main {
+  padding-top: 36px;
+}
+html[data-platform="darwin"] .play-hud {
+  padding-top: 40px;
+  padding-left: 78px;
+  -webkit-app-region: drag;
+}
+html[data-platform="darwin"] .play-hud button,
+html[data-platform="darwin"] .play-hud input,
+html[data-platform="darwin"] .play-hud label,
+html[data-platform="darwin"] .play-hud a {
+  -webkit-app-region: no-drag;
+}
+
 .play-screen {
   min-height: 100vh;
   display: flex;

@@ -1,7 +1,9 @@
 /**
- * USB interface helpers. Chromium/Electron uses WASAPI on Windows, not ASIO,
- * so a Scarlett 2i2 appears as a 2-channel class-compliant capture device.
+ * USB interface helpers. Chromium/Electron uses Core Audio on macOS and WASAPI
+ * on Windows — not ASIO — so a Scarlett 2i2 appears as a class-compliant capture device.
  */
+
+import { hostPlatform, type HostPlatform } from "../platform";
 
 export type InputKind = "scarlett" | "loopback" | "other";
 export type InputChannel = 0 | 1;
@@ -40,7 +42,7 @@ export type CaptureConstraints = MediaTrackConstraints & {
 
 export function classifyInputLabel(label: string): InputKind {
   const text = label.toLowerCase();
-  if (/loopback/.test(text)) return "loopback";
+  if (/loopback|blackhole|soundflower/.test(text)) return "loopback";
   if (/scarlett|focusrite/.test(text)) return "scarlett";
   return "other";
 }
@@ -128,20 +130,30 @@ export function buildConstraintAttempts(deviceId?: string): CaptureConstraints[]
   ];
 }
 
-export function describeCaptureError(err: unknown): string {
+export function describeCaptureError(err: unknown, platform: HostPlatform = hostPlatform()): string {
   const name = err && typeof err === "object" && "name" in err ? String(err.name) : "";
   const message = err instanceof Error ? err.message : "Could not open the guitar input.";
+  const mac = platform === "darwin";
+
   if (name === "NotAllowedError" || name === "PermissionDeniedError") {
-    return "Microphone permission was blocked. Allow audio input for DUS Guitar, then reconnect.";
+    return mac
+      ? "Microphone permission was blocked. Open System Settings → Privacy & Security → Microphone, enable DUS Guitar, then reconnect."
+      : "Microphone permission was blocked. Allow audio input for DUS Guitar, then reconnect.";
   }
   if (name === "NotFoundError" || name === "DevicesNotFoundError") {
-    return "No audio input found. Plug in the Scarlett 2i2 (or another interface), wait for Windows to see it, then click Refresh devices.";
+    return mac
+      ? "No audio input found. Plug in the Scarlett 2i2 (or another interface), wait for macOS to list it, then click Refresh devices."
+      : "No audio input found. Plug in the Scarlett 2i2 (or another interface), wait for Windows to see it, then click Refresh devices.";
   }
   if (name === "NotReadableError" || name === "TrackStartError" || /could not start audio source/i.test(message)) {
-    return "Windows could not open this interface. Close any DAW using Focusrite ASIO (Ableton, Reaper, Guitar Rig, etc.), then try again. Chromium uses WASAPI, not ASIO.";
+    return mac
+      ? "macOS could not open this interface. Close Logic Pro, GarageBand, or any DAW using the Scarlett exclusively, then try again. Chromium uses Core Audio, not ASIO."
+      : "Windows could not open this interface. Close any DAW using Focusrite ASIO (Ableton, Reaper, Guitar Rig, etc.), then try again. Chromium uses WASAPI, not ASIO.";
   }
   if (name === "OverconstrainedError" || name === "ConstraintNotSatisfiedError") {
-    return "This interface refused the capture format. In Focusrite Control / Windows Sound, set the Scarlett to 44.1 or 48 kHz, then reconnect.";
+    return mac
+      ? "This interface refused the capture format. In Audio MIDI Setup or Focusrite Control, set the Scarlett to 44.1 or 48 kHz, then reconnect."
+      : "This interface refused the capture format. In Focusrite Control / Windows Sound, set the Scarlett to 44.1 or 48 kHz, then reconnect.";
   }
   if (name === "AbortError") {
     return "Audio capture was interrupted. Unplug and replug the Scarlett, then reconnect.";
@@ -150,14 +162,36 @@ export function describeCaptureError(err: unknown): string {
     return "Audio input is not allowed in this window. Use the DUS Guitar desktop app.";
   }
   if (name === "NotSupportedError") {
-    return "This build cannot open microphone devices. Use the Windows desktop app rather than a locked-down browser.";
+    return "This build cannot open microphone devices. Use the DUS Guitar desktop app rather than a locked-down browser.";
   }
   return message;
 }
 
+export function setupHints(platform: HostPlatform = hostPlatform()) {
+  const mac = platform === "darwin";
+  return {
+    emptyDevices: mac
+      ? "No inputs yet. Plug in the Scarlett, click Enable input so macOS can grant microphone access, then Refresh."
+      : "No inputs yet. Plug in the Scarlett, click Enable input so Windows grants microphone access, then Refresh.",
+    monoCapture: mac
+      ? "This endpoint is reporting one channel, so Input 1 is the guitar. That is normal for some Core Audio views of the 2i2."
+      : "This endpoint is reporting one channel, so Input 1 is the guitar. That is normal for some WASAPI views of the 2i2.",
+    monitorPath: mac
+      ? "Direct Monitor lets you hear yourself with no software delay. The app still captures Input 1 over Core Audio."
+      : "Direct Monitor lets you hear yourself with no software delay. The app still captures Input 1 over WASAPI.",
+    exclusiveAccess: mac
+      ? "Close Logic Pro, GarageBand, or other hosts that take exclusive access to the Scarlett, or macOS will refuse the input."
+      : "Close Ableton, Reaper, or other hosts that hold the Focusrite ASIO driver, or Windows will refuse the input.",
+  };
+}
+
 export async function openCaptureStream(deviceId?: string): Promise<MediaStream> {
   if (!navigator.mediaDevices?.getUserMedia) {
-    throw new Error("This app needs microphone access. Run the Windows desktop build.");
+    throw new Error("This app needs microphone access. Run the DUS Guitar desktop app.");
+  }
+  const granted = await window.dusDesktop?.requestMicrophoneAccess?.();
+  if (granted === false) {
+    throw new Error(describeCaptureError({ name: "NotAllowedError" }));
   }
   const attempts = buildConstraintAttempts(deviceId);
   let lastError: unknown;

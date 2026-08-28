@@ -65,7 +65,7 @@ export class GuitarInput {
           autoGainControl: false,
         });
       } catch {
-        /* some WASAPI endpoints reject post-open constraint updates */
+        /* some Core Audio / WASAPI endpoints reject post-open constraint updates */
       }
     }
 
