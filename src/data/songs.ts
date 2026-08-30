@@ -1,17 +1,8 @@
 import type { Song } from "../types";
 import { findImportedSong } from "./library";
-import { fromBeats, legatoPhrase, loopBar, shiftBeats, songDuration, asTabEvent, arpeggioSweep, sweepWithHammer, type BeatEvent, type BeatTuple, type ArpeggioShape } from "../engine/tab";
-
-function makeSong(
-  song: Omit<Song, "notes" | "duration"> & { events: BeatEvent[] },
-): Song {
-  const notes = fromBeats(song.bpm, song.events);
-  return {
-    ...song,
-    notes,
-    duration: songDuration(notes),
-  };
-}
+import { SCALE_SONGS } from "./scaleSongs";
+import { makeSong } from "./makeSong";
+import { legatoPhrase, loopBar, shiftBeats, asTabEvent, arpeggioSweep, sweepWithHammer, type BeatEvent, type BeatTuple, type ArpeggioShape } from "../engine/tab";
 
 /** Two-string power chord: root plus the fifth on the next thinner string. */
 function powerChord(
@@ -790,6 +781,7 @@ export const SONGS: Song[] = [
     cover: { from: "#0c4a6e", to: "#be123c", motif: "slash" },
     events: venomRakeEvents,
   }),
+  ...SCALE_SONGS,
 ];
 
 export const LEARN_PATH = [
@@ -799,6 +791,10 @@ export const LEARN_PATH = [
   { songId: "power-pulse", title: "Power chords", blurb: "Two-string rock shapes. Strum both notes together." },
   { songId: "ode-to-joy", title: "Play a melody", blurb: "A real tune with held notes and simple shifts." },
   { songId: "pentatonic-drive", title: "Rock vocabulary", blurb: "The minor pentatonic box used in countless riffs." },
+  { songId: "five-boxes", title: "Pentatonic neck", blurb: "Walk all five E minor pentatonic boxes from open strings to the 12th fret." },
+  { songId: "iron-ladder", title: "One string at a time", blurb: "Climb each string from fret 0 to 12 so the whole neck becomes one scale." },
+  { songId: "caged-voyage", title: "CAGED major", blurb: "The same G major melody in five neck positions." },
+  { songId: "three-across", title: "Three-note major", blurb: "G major three-notes-per-string, shifting up the neck in triplets." },
   { songId: "venom-drive", title: "Metalcore chugs", blurb: "Palm-mute E5 eighths, then hit G5, C5 and D5." },
   { songId: "venom-coil", title: "Hammer-ons & pull-offs", blurb: "Pick once, then hammer (h) and pull (p) on the same string." },
   { songId: "venom-arc", title: "Metal arpeggios", blurb: "Pick across the strings through Em, C, G and D, then sweep sixteenths." },

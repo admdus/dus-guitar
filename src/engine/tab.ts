@@ -65,6 +65,28 @@ export function songDuration(notes: SongNote[]): number {
   return Math.max(...notes.map((note) => note.time + Math.max(note.duration, 0.25))) + 0.4;
 }
 
+/** One scale step: string, fret, and optional duration in beats. */
+export type ScaleStep = readonly [string: number, fret: number, duration?: number];
+
+/**
+ * Walk a list of neck positions from `startBeat`.
+ * Each step lasts `defaultDuration` beats unless the tuple sets its own.
+ */
+export function scalePhrase(
+  startBeat: number,
+  steps: readonly ScaleStep[],
+  defaultDuration = 0.5,
+): TabEvent[] {
+  let beat = startBeat;
+  return steps.map((step) => {
+    const [string, fret, duration] = step;
+    const d = duration ?? defaultDuration;
+    const event: TabEvent = { beat, string, fret, duration: d * 0.9 };
+    beat += d;
+    return event;
+  });
+}
+
 /** Repeat a one-bar pattern across `bars` bars. Pattern beats are 0..barBeats. */
 export function loopBar(bars: number, barBeats: number, pattern: BeatEvent[]): BeatEvent[] {
   const out: BeatEvent[] = [];

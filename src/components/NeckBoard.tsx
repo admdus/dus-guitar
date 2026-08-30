@@ -10,9 +10,13 @@ interface Props {
   onPlayFret: (string: StringIndex, fret: number) => void;
 }
 
-const FRETS = 12;
+const MIN_FRETS = 12;
+const MAX_FRETS = 15;
+const DOTS = [3, 5, 7, 9, 12, 15];
 
 export function NeckBoard({ notes, currentTime, tuning, highlight, onPlayFret }: Props) {
+  const highest = notes.reduce((max, note) => Math.max(max, note.fret), 0);
+  const frets = Math.min(MAX_FRETS, Math.max(MIN_FRETS, highest));
   const upcoming = notes.filter((n) => n.status === "pending" && n.time >= currentTime - 0.05 && n.time <= currentTime + 1.6);
 
   return (
@@ -26,8 +30,8 @@ export function NeckBoard({ notes, currentTime, tuning, highlight, onPlayFret }:
       </div>
       <div className="neck-grid">
         {([1, 2, 3, 4, 5, 6] as StringIndex[]).map((s) => (
-          <div className="neck-string" key={s}>
-            {Array.from({ length: FRETS + 1 }, (_, fret) => {
+          <div className="neck-string" key={s} style={{ gridTemplateColumns: `repeat(${frets + 1}, 1fr)` }}>
+            {Array.from({ length: frets + 1 }, (_, fret) => {
               const match = upcoming.find((n) => n.string === s && n.fret === fret);
               const isUpcoming = Boolean(match);
               const isNow = upcoming.some((n) => n.string === s && n.fret === fret && Math.abs(n.time - currentTime) < 0.12);
@@ -39,7 +43,7 @@ export function NeckBoard({ notes, currentTime, tuning, highlight, onPlayFret }:
                   : String(fret)
                 : fret === 0
                   ? String(fret)
-                  : [3, 5, 7, 9, 12].includes(fret)
+                  : DOTS.includes(fret)
                     ? "•"
                     : "";
               return (

@@ -56,6 +56,7 @@ export function Home({ onPlay, onSetup, guitarStatus, scores, tuning, onTuning }
 
       <SongRow title="Imported tracks" songs={loadImportedSongs()} scores={scores} onPlay={onPlay} />
       <SongRow title="Beginner tracks" songs={songsByCategory("beginner")} scores={scores} onPlay={onPlay} />
+      <SongRow title="Scale exercises" songs={songsByCategory("exercise")} scores={scores} onPlay={onPlay} />
       <SongRow title="Metal" songs={SONGS.filter((s) => s.genre === "Metal")} scores={scores} onPlay={onPlay} />
       <SongRow
         title="Rock & blues"

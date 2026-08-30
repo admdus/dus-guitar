@@ -1,4 +1,22 @@
-import { arpeggioSweep, fromBeats, legatoPhrase, sweepWithHammer, techniqueFromFrets } from "./tab";
+import { arpeggioSweep, fromBeats, legatoPhrase, scalePhrase, sweepWithHammer, techniqueFromFrets } from "./tab";
+
+describe("scalePhrase", () => {
+  it("walks neck positions with a default step, or a per-note duration", () => {
+    const events = scalePhrase(
+      4,
+      [
+        [6, 0],
+        [6, 3],
+        [5, 2, 1],
+      ],
+      0.5,
+    );
+    expect(events).toHaveLength(3);
+    expect(events[0]).toMatchObject({ beat: 4, string: 6, fret: 0, duration: 0.45 });
+    expect(events[1]).toMatchObject({ beat: 4.5, string: 6, fret: 3 });
+    expect(events[2]).toMatchObject({ beat: 5, string: 5, fret: 2, duration: 0.9 });
+  });
+});
 
 describe("techniqueFromFrets", () => {
   it("classifies hammer, pull, and same-fret", () => {
