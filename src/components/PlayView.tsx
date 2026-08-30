@@ -3,7 +3,7 @@ import { drawFretboard } from "./FretboardCanvas";
 import { NeckBoard } from "./NeckBoard";
 import { IconBack, Stars } from "./Icons";
 import { TuningPicker } from "./TuningPicker";
-import { SongEngine } from "../engine/playback";
+import { clampSpeed, MAX_SPEED, MIN_SPEED, SongEngine } from "../engine/playback";
 import { getSong, saveHighScore } from "../data/songs";
 import { bestPositionForMidi } from "../engine/notes";
 import { songForTuning, type Tuning } from "../engine/tuning";
@@ -174,9 +174,11 @@ export function PlayView({
     void start();
   };
   const changeSpeed = (value: number) => {
-    setSpeed(value);
-    engineRef.current?.setSpeed(value);
+    const next = clampSpeed(value);
+    setSpeed(next);
+    engineRef.current?.setSpeed(next);
   };
+  const speedPercent = Math.round(speed * 100);
   const playFret = (string: StringIndex, fret: number) => {
     void resumeAudio();
     pluckFret(string, fret, 0.2, tuning);
@@ -247,13 +249,22 @@ export function PlayView({
         <button className="btn" onClick={restart}>
           Restart
         </button>
-        <div className="speed-toggle">
-          {[0.5, 0.75, 1].map((value) => (
-            <button key={value} className={speed === value ? "on" : ""} onClick={() => changeSpeed(value)}>
-              {Math.round(value * 100)}%
-            </button>
-          ))}
-        </div>
+        <label className="speed-slider">
+          <span>Speed</span>
+          <input
+            id="song-speed"
+            type="range"
+            name="song-speed"
+            min={Math.round(MIN_SPEED * 100)}
+            max={Math.round(MAX_SPEED * 100)}
+            step={1}
+            value={speedPercent}
+            aria-label="Song speed"
+            aria-valuetext={`${speedPercent} percent`}
+            onChange={(e) => changeSpeed(Number(e.target.value) / 100)}
+          />
+          <output htmlFor="song-speed">{speedPercent}%</output>
+        </label>
         <TuningPicker value={tuning} onChange={onTuning} compact />
         <label className="check">
           <input type="checkbox" checked={metronome} onChange={(e) => setMetronome(e.target.checked)} />
