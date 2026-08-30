@@ -1,7 +1,6 @@
 import { clampSpeed, MAX_SPEED, MIN_SPEED, SongEngine } from "./playback";
-import { getSong } from "../data/songs";
+import { getSong, LEARN_PATH, SONGS } from "../data/songs";
 import { noteMidi } from "./notes";
-import { SONGS } from "../data/songs";
 import { DROP_D_TUNING, songForTuning } from "./tuning";
 
 describe("song library", () => {
@@ -17,6 +16,9 @@ describe("song library", () => {
         expect(note.fret).toBeGreaterThanOrEqual(0);
         expect(noteMidi(note.string, note.fret)).toBeGreaterThanOrEqual(40);
       }
+    }
+    for (const step of LEARN_PATH) {
+      expect(SONGS.some((song) => song.id === step.songId)).toBe(true);
     }
   });
 });
@@ -253,6 +255,68 @@ describe("Venom metal trainers", () => {
     engine.start(0);
     const midi = noteMidi(song.notes[0].string, song.notes[0].fret);
     expect(engine.feedPitch(midi, countIn, true)).toBe("perfect");
+  });
+});
+
+const EM_PENT = new Set([2, 4, 7, 9, 11]); // D E G A B
+const G_MAJOR = new Set([0, 2, 4, 6, 7, 9, 11]); // C D E F# G A B
+
+function pitchClass(string: number, fret: number): number {
+  return noteMidi(string as 1 | 2 | 3 | 4 | 5 | 6, fret) % 12;
+}
+
+describe("scale neck trainers", () => {
+  it("includes Five Boxes as E minor pentatonic across all five positions", () => {
+    const song = getSong("five-boxes")!;
+    expect(song.genre).toBe("Exercise");
+    expect(song.bpm).toBe(96);
+    expect(song.difficulty).toBe(3);
+    expect(song.notes.length).toBeGreaterThan(80);
+    expect(song.notes.every((n) => EM_PENT.has(pitchClass(n.string, n.fret)))).toBe(true);
+    expect(new Set(song.notes.map((n) => n.string)).size).toBe(6);
+    expect(Math.max(...song.notes.map((n) => n.fret))).toBeGreaterThanOrEqual(12);
+    expect(Math.min(...song.notes.map((n) => n.fret))).toBe(0);
+    const engine = new SongEngine(song);
+    const countIn = (60 / song.bpm) * 4 * 1000;
+    engine.start(0);
+    const midi = noteMidi(song.notes[0].string, song.notes[0].fret);
+    expect(engine.feedPitch(midi, countIn, true)).toBe("perfect");
+  });
+
+  it("includes Iron Ladder as a 0–12 climb on every string", () => {
+    const song = getSong("iron-ladder")!;
+    expect(song.genre).toBe("Exercise");
+    expect(song.notes.every((n) => EM_PENT.has(pitchClass(n.string, n.fret)))).toBe(true);
+    for (const string of [1, 2, 3, 4, 5, 6] as const) {
+      const frets = song.notes.filter((n) => n.string === string).map((n) => n.fret);
+      expect(frets).toContain(0);
+      expect(frets).toContain(12);
+    }
+  });
+
+  it("includes CAGED Voyage as one G major melody in five neck zones", () => {
+    const song = getSong("caged-voyage")!;
+    expect(song.genre).toBe("Exercise");
+    expect(song.bpm).toBe(84);
+    expect(song.notes.every((n) => G_MAJOR.has(pitchClass(n.string, n.fret)))).toBe(true);
+    const frets = song.notes.map((n) => n.fret);
+    expect(Math.min(...frets)).toBeLessThanOrEqual(3);
+    expect(Math.max(...frets)).toBeGreaterThanOrEqual(12);
+    expect(new Set(song.notes.map((n) => n.string)).size).toBe(6);
+  });
+
+  it("includes Three Across as G major 3NPS up the neck", () => {
+    const song = getSong("three-across")!;
+    expect(song.genre).toBe("Exercise");
+    expect(song.bpm).toBe(72);
+    expect(song.difficulty).toBe(4);
+    expect(song.notes.every((n) => G_MAJOR.has(pitchClass(n.string, n.fret)))).toBe(true);
+    expect(Math.max(...song.notes.map((n) => n.fret))).toBeGreaterThanOrEqual(13);
+    const strings = song.notes.map((n) => n.string);
+    const threeInARow = strings.some(
+      (_, i) => i >= 2 && strings[i] === strings[i - 1] && strings[i] === strings[i - 2],
+    );
+    expect(threeInARow).toBe(true);
   });
 });
 
