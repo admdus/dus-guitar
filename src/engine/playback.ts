@@ -7,6 +7,15 @@ import { STANDARD_TUNING, type Tuning } from "./tuning";
 /** Keep a pick live while YIN locks on a two-string hit. Match ONSET_HOLD_MS. */
 const PICK_HOLD_SEC = 0.12;
 
+/** Slowest and fastest playback rates the trainer allows (10%–100%). */
+export const MIN_SPEED = 0.1;
+export const MAX_SPEED = 1;
+
+export function clampSpeed(speed: number): number {
+  if (!Number.isFinite(speed)) return MAX_SPEED;
+  return Math.min(MAX_SPEED, Math.max(MIN_SPEED, speed));
+}
+
 export interface EngineOptions {
   latencyMs?: number;
   tuning?: Tuning;
@@ -43,14 +52,14 @@ export class SongEngine {
     this.latencyMs = ms;
   }
 
-  setSpeed(speed: number) {
+  setSpeed(speed: number, nowMs = this.nowMs()) {
+    const next = clampSpeed(speed);
     if (this.playing) {
-      const now = this.nowMs();
-      const t = this.rawTimeAt(now);
-      this.speed = speed;
-      this.originMs = now - (t / this.speed) * 1000;
+      const t = this.rawTimeAt(nowMs);
+      this.speed = next;
+      this.originMs = nowMs - (t / this.speed) * 1000;
     } else {
-      this.speed = speed;
+      this.speed = next;
     }
   }
 

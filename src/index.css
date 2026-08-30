@@ -499,16 +499,27 @@ html[data-platform="darwin"] .play-hud a {
 .input-meter span { display: block; width: 100%; background: #34d399; }
 .progress-line { height: 4px; background: #111827; }
 .progress-line span { display: block; height: 100%; background: linear-gradient(90deg, #22d3ee, #34d399); }
-.speed-toggle { display: flex; background: var(--card); border-radius: 999px; padding: 3px; }
-.speed-toggle button {
-  border: 0;
-  background: transparent;
-  color: var(--muted);
+.speed-slider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--card);
   border-radius: 999px;
-  padding: 6px 10px;
+  padding: 4px 12px 4px 10px;
+  color: var(--muted);
+  font-size: 0.85rem;
   font-weight: 700;
 }
-.speed-toggle .on { background: #22d3ee; color: #083344; }
+.speed-slider input[type="range"] {
+  width: 132px;
+  accent-color: #22d3ee;
+}
+.speed-slider output {
+  min-width: 3.2em;
+  color: #22d3ee;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
 .check { display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: 0.9rem; }
 .drum-pick { gap: 8px; }
 .drum-pick select {

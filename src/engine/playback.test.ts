@@ -1,4 +1,4 @@
-import { SongEngine } from "./playback";
+import { clampSpeed, MAX_SPEED, MIN_SPEED, SongEngine } from "./playback";
 import { getSong } from "../data/songs";
 import { noteMidi } from "./notes";
 import { SONGS } from "../data/songs";
@@ -150,6 +150,33 @@ describe("SongEngine", () => {
     engine.start(0);
     const fifthOctaveDown = noteMidi(5, 2, DROP_D_TUNING) - 12;
     expect(engine.feedPitch(fifthOctaveDown, countIn, true)).toBe("perfect");
+  });
+
+  it("clamps playback speed between 10% and 100%", () => {
+    expect(MIN_SPEED).toBe(0.1);
+    expect(MAX_SPEED).toBe(1);
+    expect(clampSpeed(0.37)).toBeCloseTo(0.37);
+    expect(clampSpeed(0.05)).toBe(MIN_SPEED);
+    expect(clampSpeed(2)).toBe(MAX_SPEED);
+    expect(clampSpeed(Number.NaN)).toBe(MAX_SPEED);
+
+    const engine = new SongEngine(song);
+    engine.setSpeed(0.05);
+    expect(engine.snapshot().speed).toBe(MIN_SPEED);
+    engine.setSpeed(1.8);
+    expect(engine.snapshot().speed).toBe(MAX_SPEED);
+    engine.setSpeed(0.42);
+    expect(engine.snapshot().speed).toBeCloseTo(0.42);
+  });
+
+  it("keeps song time continuous when speed changes mid-play", () => {
+    const engine = new SongEngine(song);
+    engine.start(0);
+    const at = countInMs + 2000;
+    const before = engine.tick(at).currentTime;
+    engine.setSpeed(0.25, at);
+    expect(engine.tick(at).currentTime).toBeCloseTo(before, 5);
+    expect(engine.tick(at + 4000).currentTime).toBeCloseTo(before + 1, 5);
   });
 
   it("does not let a ringing power chord steal the next chug", () => {
