@@ -25,12 +25,18 @@ export function estimatedRoundTripMs(
   );
 }
 
+function inputLatencyFromSettings(settings: unknown): number {
+  if (!settings || typeof settings !== "object") return 0;
+  const latency = (settings as { latency?: unknown }).latency;
+  return typeof latency === "number" && Number.isFinite(latency) ? latency : 0;
+}
+
 export function readRoundTripMs(
   ctx: { baseLatency?: number; outputLatency?: number },
-  trackSettings: { latency?: number },
+  trackSettings: unknown,
 ): number | null {
   const ms = estimatedRoundTripMs(
-    trackSettings.latency ?? 0,
+    inputLatencyFromSettings(trackSettings),
     ctx.baseLatency ?? 0,
     ctx.outputLatency ?? 0,
   );
