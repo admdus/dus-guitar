@@ -177,8 +177,8 @@ export function setupHints(platform: HostPlatform = hostPlatform()) {
       ? "This endpoint is reporting one channel, so Input 1 is the guitar. That is normal for some Core Audio views of the 2i2."
       : "This endpoint is reporting one channel, so Input 1 is the guitar. That is normal for some WASAPI views of the 2i2.",
     monitorPath: mac
-      ? "Direct Monitor lets you hear yourself with no software delay. The app still captures Input 1 over Core Audio."
-      : "Direct Monitor lets you hear yourself with no software delay. The app still captures Input 1 over WASAPI.",
+      ? "Scarlett Direct Monitor is dry and instant. For amp tone, turn Direct Monitor off and pick a software preset — there is a little latency. The app still captures Input 1 over Core Audio."
+      : "Scarlett Direct Monitor is dry and instant. For amp tone, turn Direct Monitor off and pick a software preset — there is a little latency. The app still captures Input 1 over WASAPI.",
     exclusiveAccess: mac
       ? "Close Logic Pro, GarageBand, or other hosts that take exclusive access to the Scarlett, or macOS will refuse the input."
       : "Close Ableton, Reaper, or other hosts that hold the Focusrite ASIO driver, or Windows will refuse the input.",

@@ -4,6 +4,8 @@ import { channelLabel, setupHints, type CaptureInfo, type InputChannel, type Inp
 import type { DetectedPitch } from "../types";
 import type { Tuning } from "../engine/tuning";
 import { TuningPicker } from "./TuningPicker";
+import { AmpPicker } from "./AmpPicker";
+import type { AmpPrefs } from "../audio/ampPresets";
 
 interface Props {
   status: GuitarStatus;
@@ -19,6 +21,8 @@ interface Props {
   onDisconnect: () => void;
   onRefresh: () => void;
   onChannel: (channel: InputChannel) => void;
+  amp: AmpPrefs;
+  onAmp: (prefs: AmpPrefs) => void;
 }
 
 export function Setup({
@@ -35,6 +39,8 @@ export function Setup({
   onDisconnect,
   onRefresh,
   onChannel,
+  amp,
+  onAmp,
 }: Props) {
   useEffect(() => {
     onRefresh();
@@ -56,7 +62,8 @@ export function Setup({
           <h1>Connect your guitar</h1>
           <p className="lede">
             Built for USB interfaces like the Focusrite Scarlett 2i2. Plug the guitar into Input 1, pick that device here,
-            and the app listens on that channel for pitch and attacks.
+            and the app listens on that channel for pitch and attacks. Pick an amp preset to hear the
+            guitar through your headphones or speakers.
           </p>
         </div>
       </header>
@@ -143,7 +150,18 @@ export function Setup({
           </div>
         </li>
         <li>
-          <h3>4. Tune, then play</h3>
+          <h3>4. Hear your guitar</h3>
+          <p>
+            Software amp presets turn the dry interface signal into an electric tone so you can hear
+            yourself while you play. Pitch detection stays on the dry input.
+          </p>
+          <AmpPicker value={amp} onChange={onAmp} />
+          {status !== "live" && (
+            <p className="empty">Enable input first, then pick a string — the preset should come through the speakers.</p>
+          )}
+        </li>
+        <li>
+          <h3>5. Tune, then play</h3>
           <p>
             Match the tuner to your guitar. Drop D rewrites every song so it still sounds the same — the low
             string is a D, so those notes sit two frets higher and power chords become one-finger shapes.

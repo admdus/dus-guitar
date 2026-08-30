@@ -10,6 +10,8 @@ import {
   type InputDevice,
 } from "./devices";
 import type { DetectedPitch } from "../types";
+import { AmpMonitor } from "./ampMonitor";
+import { loadAmpPrefs, type AmpPrefs } from "./ampPresets";
 
 export type { InputDevice, InputChannel, CaptureInfo } from "./devices";
 export type PitchListener = (pitch: DetectedPitch | null) => void;
@@ -32,6 +34,8 @@ export class GuitarInput {
   private onsetArmedUntilMs = 0;
   private onsetDelivered = false;
   private watchingDevices = false;
+  private monitor: AmpMonitor | null = null;
+  private monitorPrefs: AmpPrefs = loadAmpPrefs();
   running = false;
 
   async listDevices(): Promise<InputDevice[]> {
@@ -88,6 +92,8 @@ export class GuitarInput {
     this.analyser.fftSize = 4096;
     this.analyser.smoothingTimeConstant = 0;
     this.source.connect(this.splitter);
+    this.monitor = new AmpMonitor(this.ctx);
+    this.monitor.apply(this.monitorPrefs);
     this.routeChannel();
     this.buffer = new Float32Array(this.analyser.fftSize);
     this.running = true;
@@ -101,6 +107,11 @@ export class GuitarInput {
 
   getChannel() {
     return this.channel;
+  }
+
+  setMonitor(prefs: AmpPrefs) {
+    this.monitorPrefs = prefs;
+    this.monitor?.apply(prefs);
   }
 
   getCaptureInfo(): CaptureInfo | null {
@@ -120,6 +131,8 @@ export class GuitarInput {
     this.running = false;
     if (this.raf) cancelAnimationFrame(this.raf);
     this.raf = 0;
+    this.monitor?.dispose();
+    this.monitor = null;
     this.splitter?.disconnect();
     this.source?.disconnect();
     this.analyser?.disconnect();
@@ -158,6 +171,7 @@ export class GuitarInput {
     const index = Math.min(this.channel, maxIndex);
     this.splitter.disconnect();
     this.splitter.connect(this.analyser, index, 0);
+    this.monitor?.attach(this.splitter, index);
   }
 
   private async ensureDeviceLabels() {

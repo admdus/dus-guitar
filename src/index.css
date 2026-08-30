@@ -520,9 +520,82 @@ html[data-platform="darwin"] .play-hud a {
   font-size: 0.85rem;
   font-weight: 700;
 }
-.drum-pick select:focus {
+.drum-pick select:focus,
+.amp-pick select:focus {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+.amp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 10px;
+  margin: 12px 0 4px;
+}
+.amp-card {
+  text-align: left;
+  border: 1px solid var(--line);
+  background: var(--card-2);
+  color: var(--text);
+  border-radius: 16px;
+  padding: 14px 14px 12px;
+  font-weight: 650;
+}
+.amp-card strong {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.95rem;
+}
+.amp-card em {
+  font-style: normal;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 800;
+}
+.amp-card p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.amp-card.on {
+  border-color: var(--accent);
+  background: rgba(34, 211, 238, 0.08);
+}
+.amp-card.on em { color: var(--accent); }
+.amp-mix {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  margin-top: 12px;
+}
+.amp-volume, .amp-pick {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.amp-volume input, .amp-pick input[type="range"] { width: 140px; }
+.amp-pick select {
+  appearance: none;
+  cursor: pointer;
+  background-color: var(--card);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='%2393a0b8' d='M1.2 1.2 6 6l4.8-4.8'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 28px 6px 12px;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
 }
 .heard-note { margin-left: auto; color: #67e8f9; font-weight: 700; }
 .technique-callout {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { guitarInput, type CaptureInfo, type InputDevice } from "../audio/guitarInput";
 import { loadInputPrefs, preferGuitarDevice, saveInputPrefs, type InputChannel } from "../audio/devices";
+import { loadAmpPrefs, normalizeAmpPrefs, saveAmpPrefs, type AmpPrefs } from "../audio/ampPresets";
 import type { DetectedPitch } from "../types";
 
 export type GuitarStatus = "idle" | "connecting" | "live" | "error";
@@ -13,6 +14,7 @@ export function useGuitar() {
   const [channel, setChannelState] = useState<InputChannel>(() => loadInputPrefs().channel);
   const [detected, setDetected] = useState<DetectedPitch | null>(null);
   const [capture, setCapture] = useState<CaptureInfo | null>(null);
+  const [amp, setAmpState] = useState<AmpPrefs>(() => loadAmpPrefs());
 
   useEffect(() => {
     let last = 0;
@@ -50,6 +52,7 @@ export function useGuitar() {
       if (list.length) setDevices(list);
       const chosen = id ?? preferGuitarDevice(list, deviceId)?.deviceId;
       await guitarInput.start(chosen, nextChannel);
+      guitarInput.setMonitor(amp);
       const liveId = guitarInput.getDeviceId() ?? chosen;
       setDeviceId(liveId);
       setChannelState(nextChannel);
@@ -62,7 +65,7 @@ export function useGuitar() {
       setCapture(null);
       setError(err instanceof Error ? err.message : "Could not open the guitar input.");
     }
-  }, [channel, deviceId, devices, refreshDevices]);
+  }, [amp, channel, deviceId, devices, refreshDevices]);
 
   const disconnect = useCallback(async () => {
     await guitarInput.stop();
@@ -78,6 +81,13 @@ export function useGuitar() {
     saveInputPrefs({ deviceId: guitarInput.getDeviceId() ?? deviceId, channel: next });
   }, [deviceId]);
 
+  const setAmp = useCallback((next: AmpPrefs) => {
+    const prefs = normalizeAmpPrefs(next);
+    setAmpState(prefs);
+    saveAmpPrefs(prefs);
+    guitarInput.setMonitor(prefs);
+  }, []);
+
   return {
     status,
     error,
@@ -89,6 +99,8 @@ export function useGuitar() {
     connect,
     disconnect,
     setChannel,
+    setAmp,
+    amp,
     refreshDevices,
     live: status === "live",
   };
