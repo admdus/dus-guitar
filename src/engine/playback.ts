@@ -4,6 +4,9 @@ import { hitAccuracy, JUDGE_WINDOWS, judgeTiming, pointsFor } from "./score";
 import { isLegato } from "./tab";
 import { STANDARD_TUNING, type Tuning } from "./tuning";
 
+/** Keep a pick live while YIN locks on a two-string hit. Match ONSET_HOLD_MS. */
+const PICK_HOLD_SEC = 0.12;
+
 export interface EngineOptions {
   latencyMs?: number;
   tuning?: Tuning;
@@ -22,6 +25,7 @@ export class SongEngine {
   private counts: Record<Judge, number> = { perfect: 0, great: 0, good: 0, miss: 0 };
   private lastJudge: Judge | null = null;
   private lastHeardMidi: number | null = null;
+  private pickArmedUntil = -Infinity;
   private originMs = 0;
   private pausedAt = 0;
   private latencyMs: number;
@@ -79,6 +83,7 @@ export class SongEngine {
     this.counts = { perfect: 0, great: 0, good: 0, miss: 0 };
     this.lastJudge = null;
     this.lastHeardMidi = null;
+    this.pickArmedUntil = -Infinity;
     this.originMs = 0;
     this.pausedAt = 0;
   }
@@ -100,9 +105,26 @@ export class SongEngine {
     const t = this.songTime(nowMs - this.latencyMs);
     const pitchMoved = this.lastHeardMidi === null || Math.abs(midi - this.lastHeardMidi) >= 0.45;
     this.lastHeardMidi = midi;
+    if (onset) this.pickArmedUntil = t + PICK_HOLD_SEC;
+    // A two-string pick is noisy on the attack. Keep the pick armed so the
+    // pitch that locks a few frames later still counts, including repeated
+    // chugs on the same notes (no pitch move).
+    const picked = onset || t <= this.pickArmedUntil;
     // Hammer-ons and pull-offs have no pick attack — score them on a pitch change.
-    if (!onset && !pitchMoved) return null;
-    return this.tryHit((note) => pitchMatches(noteMidi(note.string, note.fret, this.tuning), midi), t, onset);
+    if (!picked && !pitchMoved) return null;
+    const judge = this.tryHit(
+      (note) =>
+        pitchMatches(
+          noteMidi(note.string, note.fret, this.tuning),
+          midi,
+          note.chordGroup !== undefined ? 70 : 50,
+        ),
+      t,
+      picked,
+    );
+    // Consume the pick so a ringing dyad cannot also hit the next chug.
+    if (judge) this.pickArmedUntil = -Infinity;
+    return judge;
   }
 
   feedFret(string: StringIndex, fret: number, nowMs = this.nowMs()): Judge | null {

@@ -188,7 +188,7 @@ function drawNote(
   if (x < -50 || x > width + 80) return;
   const y = stringY(note.string, x, height);
   const t = Math.max(0, Math.min(1, (x - PLAYHEAD) / 900));
-  const r = 16 - t * 6;
+  const r = 21 - t * 6;
   const tail = Math.max(10, note.duration * PPS * 0.7);
   const mark = techniqueMark(note.technique);
 
@@ -220,14 +220,19 @@ function drawNote(
   ctx.stroke();
 
   ctx.globalAlpha = 1;
-  ctx.fillStyle = "#0b0d14";
-  ctx.font = `700 ${Math.max(10, 15 - t * 4)}px JetBrains Mono, monospace`;
+  const fretSize = Math.max(16, 22 - t * 4);
+  ctx.font = `800 ${fretSize}px JetBrains Mono, monospace`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = "rgba(8,10,16,0.9)";
+  ctx.lineWidth = 4;
+  ctx.strokeText(String(note.fret), x, y + 0.5);
+  ctx.fillStyle = "#f8fafc";
   ctx.fillText(String(note.fret), x, y + 0.5);
 
   if (mark) {
-    const badge = Math.max(8, 11 - t * 3);
+    const badge = Math.max(10, 13 - t * 3);
     ctx.font = `800 ${badge}px Outfit, sans-serif`;
     ctx.fillStyle = note.technique === "hammer" ? "#fde68a" : "#fecdd3";
     ctx.strokeStyle = "rgba(8,10,16,0.75)";

@@ -1,4 +1,5 @@
 import { detectPitchYin, isOnset, rmsAmplitude } from "./pitch";
+import { armOnset, isOnsetArmed, ONSET_MAX_CMND, pitchProbabilityThreshold } from "./onset";
 import { centsOff, freqToMidi, midiToName } from "../engine/notes";
 import {
   openCaptureStream,
@@ -28,6 +29,8 @@ export class GuitarInput {
   private deviceId: string | undefined;
   private channel: InputChannel = 0;
   private lastPitch: DetectedPitch | null = null;
+  private onsetArmedUntilMs = 0;
+  private onsetDelivered = false;
   private watchingDevices = false;
   running = false;
 
@@ -130,6 +133,8 @@ export class GuitarInput {
     this.buffer = null;
     this.lastPitch = null;
     this.previousRms = 0;
+    this.onsetArmedUntilMs = 0;
+    this.onsetDelivered = false;
   }
 
   getCurrent() {
@@ -182,11 +187,20 @@ export class GuitarInput {
     const amplitude = rmsAmplitude(this.buffer);
     const onset = isOnset(amplitude, this.previousRms);
     this.previousRms = amplitude * 0.7 + this.previousRms * 0.3;
+    const nowMs = performance.now();
+    if (onset) this.onsetDelivered = false;
+    this.onsetArmedUntilMs = armOnset(onset, this.onsetArmedUntilMs, nowMs);
+    // Two-string picks often fail YIN on the attack frame. Keep the pick live
+    // until a pitch locks, then emit onset once so ringing cannot retrigger.
+    const armed = isOnsetArmed(nowMs, this.onsetArmedUntilMs);
+    const emitOnset = !this.onsetDelivered && (onset || armed);
 
     let detected: DetectedPitch | null = null;
     if (amplitude > 0.006) {
-      const pitch = detectPitchYin(this.buffer, this.ctx.sampleRate);
-      if (pitch && pitch.probability > 0.7) {
+      const pitch = detectPitchYin(this.buffer, this.ctx.sampleRate, 60, 1200, {
+        maxCmnd: armed ? ONSET_MAX_CMND : undefined,
+      });
+      if (pitch && pitch.probability > pitchProbabilityThreshold(armed)) {
         const midi = freqToMidi(pitch.frequency);
         detected = {
           frequency: pitch.frequency,
@@ -194,7 +208,7 @@ export class GuitarInput {
           noteName: midiToName(midi),
           cents: centsOff(midi),
           amplitude,
-          onset,
+          onset: emitOnset,
           time: this.ctx.currentTime,
         };
       }
@@ -202,8 +216,9 @@ export class GuitarInput {
     this.lastPitch = detected
       ? detected
       : this.lastPitch && amplitude > 0.004
-        ? { ...this.lastPitch, amplitude, onset: false }
+        ? { ...this.lastPitch, amplitude, onset: emitOnset }
         : null;
+    if (this.lastPitch?.onset) this.onsetDelivered = true;
 
     for (const listener of this.listeners) listener(this.lastPitch);
     this.raf = requestAnimationFrame(this.loop);
