@@ -66,6 +66,8 @@ export function App() {
           onTuning={setTuning}
           onBack={() => navigate({ name: "songs" })}
           onConnect={() => navigate({ name: "setup" })}
+          amp={guitar.amp}
+          onAmp={guitar.setAmp}
         />
       );
     }
@@ -98,6 +100,8 @@ export function App() {
           onDisconnect={() => void guitar.disconnect()}
           onRefresh={guitar.refreshDevices}
           onChannel={guitar.setChannel}
+          amp={guitar.amp}
+          onAmp={guitar.setAmp}
         />
       );
     }

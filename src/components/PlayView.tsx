@@ -11,6 +11,8 @@ import { click, pluckFret, resumeAudio } from "../audio/synth";
 import { hitsForStep, loadDrumKit, playDrumHits, saveDrumKit, type DrumKitId } from "../audio/drums";
 import { guitarInput } from "../audio/guitarInput";
 import { DrumPicker } from "./DrumPicker";
+import { AmpPicker } from "./AmpPicker";
+import { getAmpTone, type AmpPrefs } from "../audio/ampPresets";
 import type { DetectedPitch, EngineSnapshot, StringIndex } from "../types";
 
 interface Props {
@@ -22,6 +24,8 @@ interface Props {
   onTuning: (tuning: Tuning) => void;
   onBack: () => void;
   onConnect: () => void;
+  amp: AmpPrefs;
+  onAmp: (prefs: AmpPrefs) => void;
 }
 
 export function PlayView({
@@ -33,6 +37,8 @@ export function PlayView({
   onTuning,
   onBack,
   onConnect,
+  amp,
+  onAmp,
 }: Props) {
   const song = useMemo(() => {
     const catalogSong = getSong(songId);
@@ -254,6 +260,7 @@ export function PlayView({
           Click
         </label>
         <DrumPicker value={drumKit} onChange={changeDrums} />
+        <AmpPicker value={amp} onChange={onAmp} compact />
         <label className="check">
           <input type="checkbox" checked={spaceAssist} onChange={(e) => setSpaceAssist(e.target.checked)} />
           Space to hit
@@ -293,6 +300,13 @@ export function PlayView({
         <p className="practice-hint tuning-note">
           Playing in <b>Drop D</b>. Tabs keep the same pitches — low-string notes sit 2 frets higher, so power
           chords become one-finger shapes.
+        </p>
+      )}
+
+      {guitarLive && amp.enabled && (
+        <p className="practice-hint">
+          Hearing the guitar through <b>{getAmpTone(amp.presetId).name}</b>.
+          Change tone in the Amp menu — turn it Off to use Scarlett Direct Monitor only.
         </p>
       )}
 

@@ -9,6 +9,7 @@ A Windows and macOS desktop app for learning guitar songs. Plug in a guitar, pic
 - **Follow the fretboard** as numbered notes scroll toward the play line in time
 - **Score timing and pitch** — Perfect / Great / Good / Miss, combo, accuracy, and stars
 - **Tune** to standard EADGBE or Drop D (DADGBE) before you play
+- **Hear the guitar** through electric amp presets (clean, crunch, metal, and more) while you play
 - **Practice without a guitar** by clicking the neck diagram or using Space
 
 ## Install on macOS
@@ -55,17 +56,19 @@ npm run dist:win
 
 1. Plug the guitar into an audio interface (Scarlett 2i2: Input 1 + INST), or place a mic in front of an acoustic.
 2. Open **Guitar** in the sidebar and choose that input (not Loopback). Pick a string — the meter should jump and a note name should appear.
-3. Use **Tuner** so each open string is in tune. Pick **Standard** (E A D G B e) or **Drop D** (D A D G B e) to match the guitar. Drop D rewrites every song so it still sounds the same: low-string notes move up 2 frets, and power chords become one-finger shapes.
-4. Pick a song. After a 4-beat count-in, notes slide toward the cyan **PLAY** line.
-5. Fret and pick the matching note when it arrives. The bouncing ball marks the current string. Hits light up; misses fade red.
-6. The neck at the bottom shows which frets are coming up. Click it to play a note if you are practicing without a guitar.
+3. Pick an **amp preset** (Clean Studio, Crunch, Metal Core, …) so you can hear the guitar through headphones or speakers. Turn Scarlett **Direct Monitor** off if you do not want a dry double of the same signal.
+4. Use **Tuner** so each open string is in tune. Pick **Standard** (E A D G B e) or **Drop D** (D A D G B e) to match the guitar. Drop D rewrites every song so it still sounds the same: low-string notes move up 2 frets, and power chords become one-finger shapes.
+5. Pick a song. After a 4-beat count-in, notes slide toward the cyan **PLAY** line.
+6. Fret and pick the matching note when it arrives. The bouncing ball marks the current string. Hits light up; misses fade red.
+7. The neck at the bottom shows which frets are coming up. Click it to play a note if you are practicing without a guitar.
 
-Speed can be 50%, 75%, or 100%. Turn **Click** on for a metronome, or pick **Drums** (Kick, Rock, Pop, Metal, Shuffle) for a backing groove. **Space to hit** scores the current note from the keyboard so you can learn the rhythm first.
+Speed can be 50%, 75%, or 100%. Turn **Click** on for a metronome, or pick **Drums** (Kick, Rock, Pop, Metal, Shuffle) for a backing groove. Switch **Amp** on the play bar to change tone mid-song. **Space to hit** scores the current note from the keyboard so you can learn the rhythm first.
 
 ## Input tips
 
 - Turn off echo cancellation / “enhancements” on the recording device if the pitch is unstable.
-- If hits feel late, raise **Input latency** on the Guitar page (try 20–80 ms).
+- If hits feel late, raise **Input latency** on the Guitar page (try 20–80 ms). Software amp monitoring adds a little delay of its own; headphones are cleaner than speakers next to a mic.
+- Software monitoring is off when **Amp** is set to Off, or **Hear guitar** is unchecked. Pitch detection still works.
 - YIN pitch detection is monophonic: single notes score exactly; chords count as a hit if any note in the shape is picked on time.
 - On a Mac, if the input list is empty after you click **Enable input**, open **System Settings → Privacy & Security → Microphone** and allow DUS Guitar.
 
@@ -80,6 +83,7 @@ The desktop app talks to the interface through the same path Chromium uses: **Co
 3. Open **Guitar** in the sidebar. Choose the device named Scarlett / Focusrite — not **Loopback**.
 4. Leave the channel on **Input 1 · Guitar / INST** unless the guitar is in Input 2.
 5. Pick an open string. The meter should jump and a note name should appear.
+6. Choose an amp preset on that page (or the **Amp** menu while a song is playing). Turn **Direct Monitor** off if you only want the software tone.
 
 If the device will not open, close Logic Pro, GarageBand, Ableton, Reaper, or other hosts using the Scarlett exclusively, then Reconnect. In Focusrite Control, Audio MIDI Setup (Mac), or Windows Sound, 44.1 kHz or 48 kHz is the most reliable shared-mode rate.
 
