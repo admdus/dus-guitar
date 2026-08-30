@@ -504,6 +504,26 @@ html[data-platform="darwin"] .play-hud a {
 }
 .speed-toggle .on { background: #22d3ee; color: #083344; }
 .check { display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: 0.9rem; }
+.drum-pick { gap: 8px; }
+.drum-pick select {
+  appearance: none;
+  cursor: pointer;
+  background-color: var(--card);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='%2393a0b8' d='M1.2 1.2 6 6l4.8-4.8'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 28px 6px 12px;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.drum-pick select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 .heard-note { margin-left: auto; color: #67e8f9; font-weight: 700; }
 .technique-callout {
   font-weight: 800;

@@ -60,7 +60,7 @@ npm run dist:win
 5. Fret and pick the matching note when it arrives. The bouncing ball marks the current string. Hits light up; misses fade red.
 6. The neck at the bottom shows which frets are coming up. Click it to play a note if you are practicing without a guitar.
 
-Speed can be 50%, 75%, or 100%. Turn **Click** on for a metronome. **Space to hit** scores the current note from the keyboard so you can learn the rhythm first.
+Speed can be 50%, 75%, or 100%. Turn **Click** on for a metronome, or pick **Drums** (Kick, Rock, Pop, Metal, Shuffle) for a backing groove. **Space to hit** scores the current note from the keyboard so you can learn the rhythm first.
 
 ## Input tips
 
