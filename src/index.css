@@ -545,7 +545,7 @@ html[data-platform="darwin"] .play-hud a {
   border-radius: 6px;
   font-family: "JetBrains Mono", monospace;
   font-weight: 800;
-  font-size: 0.95rem;
+  font-size: 1.05rem;
 }
 .fret-cell.open { background: #111015; }
 .fret-cell.upcoming { background: color-mix(in srgb, var(--s) 35%, #1a140f); border-color: var(--s); }
