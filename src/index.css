@@ -421,12 +421,18 @@ h2, h3 { margin: 0; }
 .error-text { color: var(--danger); }
 .latency-field {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   align-items: center;
   margin-top: 18px;
   color: var(--muted);
 }
 .latency-field input { width: 180px; }
+.latency-field em {
+  flex-basis: 100%;
+  font-style: normal;
+  font-size: 0.82rem;
+}
 
 html[data-platform="darwin"] .sidebar {
   padding-top: 52px;

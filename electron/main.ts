@@ -23,6 +23,10 @@ const isMac = process.platform === "darwin";
 nativeTheme.themeSource = "dark";
 app.setName("DUS Guitar");
 app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
+// Shared-mode WASAPI / Core Audio defaults to a large callback. 256 samples is
+// ~5 ms at 48 kHz so the software guitar monitor stays playable.
+app.commandLine.appendSwitch("audio-buffer-size", "256");
+app.commandLine.appendSwitch("disable-features", "AudioServiceOutOfProcess");
 
 let win: BrowserWindow | null = null;
 

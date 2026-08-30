@@ -25,6 +25,13 @@ describe("YIN pitch detection", () => {
     expect(result!.frequency).toBeLessThan(76);
   });
 
+  it("still locks low D2 on a 2048-sample live window", () => {
+    const result = detectPitchYin(sine(73.42, sr, 2048), sr);
+    expect(result).not.toBeNull();
+    expect(result!.frequency).toBeGreaterThan(71);
+    expect(result!.frequency).toBeLessThan(76);
+  });
+
   it("detects high E4 (329.63 Hz)", () => {
     const result = detectPitchYin(sine(329.63, sr, n), sr);
     expect(result).not.toBeNull();

@@ -67,7 +67,9 @@ Speed can be 50%, 75%, or 100%. Turn **Click** on for a metronome, or pick **Dru
 ## Input tips
 
 - Turn off echo cancellation / “enhancements” on the recording device if the pitch is unstable.
-- If hits feel late, raise **Input latency** on the Guitar page (try 20–80 ms). Software amp monitoring adds a little delay of its own; headphones are cleaner than speakers next to a mic.
+- If hits feel late, raise **Input latency** on the Guitar page (try 20–80 ms). That slider only shifts scoring, not the sound you hear.
+- To hear the guitar in time: pick **Direct** (dry, lowest software delay) and plug headphones into the Scarlett. Amp presets add tone and a little lag.
+- Do not run Scarlett **Direct Monitor** and **Hear guitar** together — you will hear a delayed second copy. For zero delay, Direct Monitor on and Hear guitar off.
 - Software monitoring is off when **Amp** is set to Off, or **Hear guitar** is unchecked. Pitch detection still works.
 - YIN pitch detection is monophonic: single notes score exactly; chords count as a hit if any note in the shape is picked on time.
 - On a Mac, if the input list is empty after you click **Enable input**, open **System Settings → Privacy & Security → Microphone** and allow DUS Guitar.
@@ -83,7 +85,7 @@ The desktop app talks to the interface through the same path Chromium uses: **Co
 3. Open **Guitar** in the sidebar. Choose the device named Scarlett / Focusrite — not **Loopback**.
 4. Leave the channel on **Input 1 · Guitar / INST** unless the guitar is in Input 2.
 5. Pick an open string. The meter should jump and a note name should appear.
-6. Choose an amp preset on that page (or the **Amp** menu while a song is playing). Turn **Direct Monitor** off if you only want the software tone.
+6. Choose **Direct** to hear yourself in time, or an amp preset for tone. Turn hardware **Direct Monitor** off if Hear guitar is on, or you will hear a slapback.
 
 If the device will not open, close Logic Pro, GarageBand, Ableton, Reaper, or other hosts using the Scarlett exclusively, then Reconnect. In Focusrite Control, Audio MIDI Setup (Mac), or Windows Sound, 44.1 kHz or 48 kHz is the most reliable shared-mode rate.
 

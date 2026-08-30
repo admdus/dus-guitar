@@ -8,6 +8,7 @@ import {
   setupHints,
   toInputDevice,
 } from "./devices";
+import { INPUT_LATENCY_HINT_SEC } from "./latency";
 
 describe("Scarlett / Focusrite device classification", () => {
   it("recognizes Scarlett and Focusrite analog endpoints", () => {
@@ -68,6 +69,7 @@ describe("capture constraints", () => {
 
     const named = buildConstraintAttempts("scarlett-id");
     expect(named.length).toBeGreaterThanOrEqual(3);
+    expect(named[0].latency).toEqual({ ideal: INPUT_LATENCY_HINT_SEC });
     for (const attempt of named) {
       expect(attempt.deviceId).toEqual({ exact: "scarlett-id" });
     }
@@ -94,6 +96,7 @@ describe("setup hints", () => {
     expect(hints.emptyDevices).toMatch(/macOS/i);
     expect(hints.monoCapture).toMatch(/Core Audio/i);
     expect(hints.monitorPath).toMatch(/Core Audio/i);
+    expect(hints.monitorPath).toMatch(/delayed second copy/i);
     expect(hints.exclusiveAccess).toMatch(/Logic Pro|GarageBand/i);
   });
 
@@ -102,5 +105,7 @@ describe("setup hints", () => {
     expect(hints.emptyDevices).toMatch(/Windows/i);
     expect(hints.monoCapture).toMatch(/WASAPI/i);
     expect(hints.exclusiveAccess).toMatch(/ASIO/i);
+    expect(hints.monitorPath).toMatch(/WASAPI/i);
+    expect(hints.monitorPath).toMatch(/Direct Monitor/i);
   });
 });

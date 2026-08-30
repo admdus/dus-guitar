@@ -12,6 +12,7 @@ import {
 import type { DetectedPitch } from "../types";
 import { AmpMonitor } from "./ampMonitor";
 import { loadAmpPrefs, type AmpPrefs } from "./ampPresets";
+import { OUTPUT_LATENCY_HINT_SEC, readRoundTripMs } from "./latency";
 
 export type { InputDevice, InputChannel, CaptureInfo } from "./devices";
 export type PitchListener = (pitch: DetectedPitch | null) => void;
@@ -79,9 +80,11 @@ export class GuitarInput {
     const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     const sampleRate = track?.getSettings().sampleRate;
     try {
-      this.ctx = sampleRate ? new Ctx({ latencyHint: "interactive", sampleRate }) : new Ctx({ latencyHint: "interactive" });
+      this.ctx = sampleRate
+        ? new Ctx({ latencyHint: OUTPUT_LATENCY_HINT_SEC, sampleRate })
+        : new Ctx({ latencyHint: OUTPUT_LATENCY_HINT_SEC });
     } catch {
-      this.ctx = new Ctx({ latencyHint: "interactive" });
+      this.ctx = new Ctx({ latencyHint: OUTPUT_LATENCY_HINT_SEC });
     }
     await this.ctx.resume();
 
@@ -89,11 +92,10 @@ export class GuitarInput {
     const reported = Math.max(1, this.source.channelCount || 1);
     this.splitter = this.ctx.createChannelSplitter(Math.max(2, reported));
     this.analyser = this.ctx.createAnalyser();
-    this.analyser.fftSize = 4096;
+    this.analyser.fftSize = 2048;
     this.analyser.smoothingTimeConstant = 0;
     this.source.connect(this.splitter);
-    this.monitor = new AmpMonitor(this.ctx);
-    this.monitor.apply(this.monitorPrefs);
+    this.monitor = new AmpMonitor(this.ctx, this.monitorPrefs);
     this.routeChannel();
     this.buffer = new Float32Array(this.analyser.fftSize);
     this.running = true;
@@ -124,6 +126,7 @@ export class GuitarInput {
       channel: this.channel,
       sampleRate: this.ctx.sampleRate || settings.sampleRate || 0,
       channelCount: this.source?.channelCount || settings.channelCount || 1,
+      roundTripMs: readRoundTripMs(this.ctx, settings),
     };
   }
 

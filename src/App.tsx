@@ -128,7 +128,7 @@ export function App() {
         {body}
         {page.name === "setup" && (
           <label className="latency-field">
-            Input latency
+            Scoring offset
             <input
               type="range"
               name="input-latency"
@@ -138,6 +138,7 @@ export function App() {
               onChange={(e) => setLatencyMs(Number(e.target.value))}
             />
             <span>{latencyMs} ms</span>
+            <em>Shifts hit timing only — it does not delay the sound you hear.</em>
           </label>
         )}
       </main>

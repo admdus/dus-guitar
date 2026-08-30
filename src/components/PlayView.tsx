@@ -305,8 +305,9 @@ export function PlayView({
 
       {guitarLive && amp.enabled && (
         <p className="practice-hint">
-          Hearing the guitar through <b>{getAmpTone(amp.presetId).name}</b>.
-          Change tone in the Amp menu — turn it Off to use Scarlett Direct Monitor only.
+          Hearing the guitar through <b>{getAmpTone(amp.presetId).name}</b>
+          {amp.presetId === "direct" ? " (low-latency dry monitor)" : ""}.
+          Amp tones add delay. Turn Amp Off and use Scarlett Direct Monitor for zero lag.
         </p>
       )}
 
