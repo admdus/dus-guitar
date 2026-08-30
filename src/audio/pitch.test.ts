@@ -31,6 +31,41 @@ describe("YIN pitch detection", () => {
     expect(Math.abs(result!.frequency - 329.63)).toBeLessThan(3);
   });
 
+  it("detects a root-heavy E5 dyad near E2", () => {
+    const e2 = 82.41;
+    const b2 = 123.47;
+    const buf = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      buf[i] =
+        0.7 * Math.sin((2 * Math.PI * e2 * i) / sr) + 0.28 * Math.sin((2 * Math.PI * b2 * i) / sr);
+    }
+    const result = detectPitchYin(buf, sr);
+    expect(result).not.toBeNull();
+    expect(result!.frequency).toBeGreaterThan(76);
+    expect(result!.frequency).toBeLessThan(90);
+  });
+
+  it("locks an equal E5 dyad after a pick using the loose CMND cap", () => {
+    const e2 = 82.41;
+    const b2 = 123.47;
+    const buf = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      const t = (2 * Math.PI * i) / sr;
+      buf[i] =
+        0.5 * (Math.sin(t * e2) + 0.45 * Math.sin(t * e2 * 2) + 0.22 * Math.sin(t * e2 * 3)) +
+        0.5 * (Math.sin(t * b2) + 0.45 * Math.sin(t * b2 * 2) + 0.22 * Math.sin(t * b2 * 3));
+    }
+    expect(detectPitchYin(buf, sr)).toBeNull();
+    const result = detectPitchYin(buf, sr, 60, 1200, { maxCmnd: 0.68 });
+    expect(result).not.toBeNull();
+    const midi = 69 + 12 * Math.log2(result!.frequency / 440);
+    // Equal-mix fifths often report the fifth (B) or its octave, not the root.
+    const nearFifth = Math.abs(midi - 47) <= 0.6 || Math.abs(midi - 35) <= 0.6;
+    const nearRoot = Math.abs(midi - 40) <= 0.6 || Math.abs(midi - 28) <= 0.6;
+    expect(nearFifth || nearRoot).toBe(true);
+    expect(result!.probability).toBeGreaterThan(0.3);
+  });
+
   it("returns null on silence", () => {
     expect(detectPitchYin(new Float32Array(n), sr)).toBeNull();
   });

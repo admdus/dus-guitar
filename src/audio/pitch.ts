@@ -14,9 +14,11 @@ export function detectPitchYin(
   sampleRate: number,
   minHz = 60,
   maxHz = 1200,
+  options: { maxCmnd?: number } = {},
 ): PitchResult | null {
   const n = samples.length;
   if (n < 256) return null;
+  const maxCmnd = options.maxCmnd ?? 0.35;
 
   const tauMin = Math.max(2, Math.floor(sampleRate / maxHz));
   const tauMax = Math.min(Math.floor(n / 2) - 2, Math.floor(sampleRate / minHz));
@@ -58,7 +60,7 @@ export function detectPitchYin(
         bestTau = t;
       }
     }
-    if (bestVal > 0.35) return null;
+    if (bestVal > maxCmnd) return null;
     tau = bestTau;
   }
 

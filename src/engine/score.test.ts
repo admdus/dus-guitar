@@ -47,6 +47,8 @@ describe("guitar notes", () => {
   it("matches pitch including octave errors", () => {
     expect(pitchMatches(40, 40.1)).toBe(true);
     expect(pitchMatches(40, 52.05)).toBe(true);
+    expect(pitchMatches(40, 28.05)).toBe(true);
+    expect(pitchMatches(40, 64)).toBe(false);
     expect(pitchMatches(40, 42)).toBe(false);
   });
 

@@ -117,6 +117,56 @@ describe("SongEngine", () => {
     engine.start(0);
     expect(engine.feedPitch(noteMidi(6, 0), countIn, true)).toBe("perfect");
   });
+
+  it("scores a two-string Drop D power chord after a noisy pick attack", () => {
+    const venom = songForTuning(getSong("venom-drive")!, DROP_D_TUNING);
+    const engine = new SongEngine(venom, { tuning: DROP_D_TUNING });
+    const countIn = (60 / venom.bpm) * 4 * 1000;
+    engine.start(0);
+    const root = noteMidi(6, 2, DROP_D_TUNING);
+    const fifth = noteMidi(5, 2, DROP_D_TUNING);
+    expect(venom.notes[0].fret).toBe(2);
+    expect(venom.notes[1].fret).toBe(2);
+    expect(venom.notes[0].string).toBe(6);
+    expect(venom.notes[1].string).toBe(5);
+    // Dyad attack: onset fires but YIN reports a non-matching pitch.
+    expect(engine.feedPitch(34.2, countIn, true)).toBeNull();
+    // Pitch locks a few frames later without a new onset — previously this missed.
+    expect(engine.feedPitch(root, countIn + 40, false)).toBe("perfect");
+    const group = venom.notes[0].chordGroup;
+    const chord = engine.tick(countIn + 40).notes.filter((n) => n.chordGroup === group);
+    expect(chord).toHaveLength(2);
+    expect(chord.every((n) => n.status === "perfect")).toBe(true);
+    expect(engine.tick(countIn + 40).counts.perfect).toBe(1);
+
+    const secondAt = countIn + 250;
+    expect(engine.feedPitch(fifth, secondAt, true)).toBe("perfect");
+  });
+
+  it("scores a Drop D E5 when the detector hears the fifth an octave down", () => {
+    const venom = songForTuning(getSong("venom-drive")!, DROP_D_TUNING);
+    const engine = new SongEngine(venom, { tuning: DROP_D_TUNING });
+    const countIn = (60 / venom.bpm) * 4 * 1000;
+    engine.start(0);
+    const fifthOctaveDown = noteMidi(5, 2, DROP_D_TUNING) - 12;
+    expect(engine.feedPitch(fifthOctaveDown, countIn, true)).toBe("perfect");
+  });
+
+  it("does not let a ringing power chord steal the next chug", () => {
+    const venom = songForTuning(getSong("venom-drive")!, DROP_D_TUNING);
+    const engine = new SongEngine(venom, { tuning: DROP_D_TUNING });
+    const countIn = (60 / venom.bpm) * 4 * 1000;
+    engine.start(0);
+    const root = noteMidi(6, 2, DROP_D_TUNING);
+    expect(engine.feedPitch(root, countIn, true)).toBe("perfect");
+    expect(engine.feedPitch(root, countIn + 50, false)).toBeNull();
+    const firstGroup = venom.notes[0].chordGroup;
+    const secondGroup = venom.notes[2].chordGroup;
+    expect(secondGroup).not.toBe(firstGroup);
+    const snap = engine.tick(countIn + 50);
+    expect(snap.notes.filter((n) => n.chordGroup === firstGroup).every((n) => n.status === "perfect")).toBe(true);
+    expect(snap.notes.filter((n) => n.chordGroup === secondGroup).every((n) => n.status === "pending")).toBe(true);
+  });
 });
 
 describe("Venom metal trainers", () => {
