@@ -1,7 +1,9 @@
 import {
+  ampGraphPlan,
   getAmpTone,
   makeDriveCurve,
   monitorOutputGain,
+  type AmpGraphPlan,
   type AmpPrefs,
 } from "./ampPresets";
 
@@ -11,22 +13,32 @@ function setParam(param: AudioParam, value: number, ctx: AudioContext) {
   param.setTargetAtTime(value, t, 0.018);
 }
 
-function makeRoomImpulse(ctx: AudioContext, seconds = 1.35): AudioBuffer {
+function makeRoomImpulse(ctx: AudioContext, seconds = 0.28): AudioBuffer {
   const length = Math.max(1, Math.floor(ctx.sampleRate * seconds));
   const buffer = ctx.createBuffer(2, length, ctx.sampleRate);
   for (let ch = 0; ch < 2; ch++) {
     const data = buffer.getChannelData(ch);
     for (let i = 0; i < length; i++) {
       const t = i / length;
-      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 2.55) * (ch === 0 ? 1 : 0.9);
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 2.4) * (ch === 0 ? 1 : 0.9);
     }
   }
   return buffer;
 }
 
+function samePlan(a: AmpGraphPlan | null, b: AmpGraphPlan): boolean {
+  return !!a
+    && a.direct === b.direct
+    && a.compressor === b.compressor
+    && a.chorus === b.chorus
+    && a.reverb === b.reverb;
+}
+
 /**
  * Software amp / cab / room for hearing a DI electric guitar.
  * Pitch detection stays on the dry splitter tap — this chain is speakers only.
+ * Direct mode is a short gain path so the pick is not delayed by compressor
+ * lookahead, chorus, convolution, or waveshaper oversampling.
  */
 export class AmpMonitor {
   private readonly ctx: AudioContext;
@@ -53,9 +65,10 @@ export class AmpMonitor {
   private readonly reverbWet: GainNode;
   private readonly limiter: WaveShaperNode;
   private readonly output: GainNode;
+  private plan: AmpGraphPlan | null = null;
   private disposed = false;
 
-  constructor(ctx: AudioContext) {
+  constructor(ctx: AudioContext, prefs?: AmpPrefs) {
     this.ctx = ctx;
     this.input = ctx.createGain();
     this.highpass = ctx.createBiquadFilter();
@@ -95,8 +108,8 @@ export class AmpMonitor {
     this.cabHp.Q.value = 0.65;
     this.cabLp.type = "lowpass";
     this.cabLp.Q.value = 0.75;
-    this.shaper.oversample = "4x";
-    this.limiter.oversample = "2x";
+    this.shaper.oversample = "none";
+    this.limiter.oversample = "none";
     this.limiter.curve = makeDriveCurve(1.6, "hard", 1024) as Float32Array<ArrayBuffer>;
     this.convolver.normalize = true;
     this.convolver.buffer = makeRoomImpulse(ctx);
@@ -107,27 +120,10 @@ export class AmpMonitor {
     this.compressor.knee.value = 18;
     this.compressor.attack.value = 0.006;
     this.compressor.release.value = 0.12;
-
-    this.input
-      .connect(this.highpass)
-      .connect(this.compressor)
-      .connect(this.driveGain)
-      .connect(this.shaper)
-      .connect(this.postGain)
-      .connect(this.bass)
-      .connect(this.mid)
-      .connect(this.treble)
-      .connect(this.presence)
-      .connect(this.cabHp)
-      .connect(this.cabLp);
-
-    this.cabLp.connect(this.chorusDry).connect(this.chorusSum);
-    this.cabLp.connect(this.chorusDelay).connect(this.chorusWet).connect(this.chorusSum);
-    this.chorusLfo.connect(this.chorusDepth).connect(this.chorusDelay.delayTime);
-    this.chorusSum.connect(this.reverbDry).connect(this.limiter);
-    this.chorusSum.connect(this.convolver).connect(this.reverbWet).connect(this.limiter);
-    this.limiter.connect(this.output).connect(ctx.destination);
     this.chorusLfo.start();
+
+    if (prefs) this.apply(prefs);
+    else this.wire(ampGraphPlan(getAmpTone("direct")));
   }
 
   attach(splitter: ChannelSplitterNode, channel: number) {
@@ -139,6 +135,9 @@ export class AmpMonitor {
   apply(prefs: AmpPrefs) {
     if (this.disposed) return;
     const tone = getAmpTone(prefs.presetId);
+    const plan = ampGraphPlan(tone);
+    if (!samePlan(this.plan, plan)) this.wire(plan);
+
     const ctx = this.ctx;
     setParam(this.input.gain, tone.preGain, ctx);
     setParam(this.highpass.frequency, tone.highpass, ctx);
@@ -170,7 +169,17 @@ export class AmpMonitor {
     } catch {
       /* already stopped */
     }
-    const nodes: AudioNode[] = [
+    for (const node of this.nodes()) {
+      try {
+        node.disconnect();
+      } catch {
+        /* already disconnected */
+      }
+    }
+  }
+
+  private nodes(): AudioNode[] {
+    return [
       this.input,
       this.highpass,
       this.compressor,
@@ -195,12 +204,54 @@ export class AmpMonitor {
       this.limiter,
       this.output,
     ];
-    for (const node of nodes) {
+  }
+
+  private wire(plan: AmpGraphPlan) {
+    for (const node of this.nodes()) {
       try {
         node.disconnect();
       } catch {
-        /* already disconnected */
+        /* first wire, or already disconnected */
       }
     }
+    this.chorusLfo.connect(this.chorusDepth).connect(this.chorusDelay.delayTime);
+
+    if (plan.direct) {
+      this.input.connect(this.highpass).connect(this.output).connect(this.ctx.destination);
+      this.plan = plan;
+      return;
+    }
+
+    this.input.connect(this.highpass);
+    if (plan.compressor) {
+      this.highpass.connect(this.compressor).connect(this.driveGain);
+    } else {
+      this.highpass.connect(this.driveGain);
+    }
+    this.driveGain
+      .connect(this.shaper)
+      .connect(this.postGain)
+      .connect(this.bass)
+      .connect(this.mid)
+      .connect(this.treble)
+      .connect(this.presence)
+      .connect(this.cabHp)
+      .connect(this.cabLp);
+
+    if (plan.chorus) {
+      this.cabLp.connect(this.chorusDry).connect(this.chorusSum);
+      this.cabLp.connect(this.chorusDelay).connect(this.chorusWet).connect(this.chorusSum);
+    } else {
+      this.cabLp.connect(this.chorusSum);
+    }
+
+    if (plan.reverb) {
+      this.chorusSum.connect(this.reverbDry).connect(this.limiter);
+      this.chorusSum.connect(this.convolver).connect(this.reverbWet).connect(this.limiter);
+    } else {
+      this.chorusSum.connect(this.limiter);
+    }
+    this.limiter.connect(this.output).connect(this.ctx.destination);
+    this.plan = plan;
   }
 }

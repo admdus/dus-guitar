@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   AMP_TONES,
   DEFAULT_AMP_PREFS,
+  ampGraphPlan,
   getAmpTone,
   isAmpPresetId,
   loadAmpPrefs,
@@ -21,7 +22,7 @@ describe("electric amp presets", () => {
 
   it("ships several electric tones with distinct gain characters", () => {
     const ids = AMP_TONES.map((tone) => tone.id);
-    expect(ids).toEqual(["clean", "chorus", "crunch", "blues", "lead", "metal", "fuzz"]);
+    expect(ids).toEqual(["direct", "clean", "chorus", "crunch", "blues", "lead", "metal", "fuzz"]);
     expect(new Set(AMP_TONES.map((tone) => tone.name)).size).toBe(AMP_TONES.length);
 
     const clean = getAmpTone("clean");
@@ -31,7 +32,7 @@ describe("electric amp presets", () => {
     expect(metal.drive).toBeGreaterThan(crunch.drive);
     expect(metal.mid).toBeLessThan(0);
     expect(getAmpTone("chorus").chorus).toBeGreaterThan(0.3);
-    expect(getAmpTone("mystery").id).toBe("clean");
+    expect(getAmpTone("mystery").id).toBe("direct");
   });
 
   it("keeps tone knobs in a playable range", () => {
@@ -59,13 +60,35 @@ describe("electric amp presets", () => {
     saveAmpPrefs({ presetId: "metal", volume: 0.4, enabled: false });
     expect(loadAmpPrefs()).toEqual({ presetId: "metal", volume: 0.4, enabled: false });
     expect(normalizeAmpPrefs({ presetId: "nope" as never, volume: 4, enabled: undefined })).toEqual({
-      presetId: "clean",
+      presetId: "direct",
       volume: 1,
       enabled: true,
     });
     expect(normalizeAmpPrefs({ volume: Number.NaN, enabled: false }).volume).toBe(DEFAULT_AMP_PREFS.volume);
     localStorage.setItem("dus-guitar.amp", "{not json");
     expect(loadAmpPrefs()).toEqual(DEFAULT_AMP_PREFS);
+  });
+
+  it("keeps Direct on a short path with no compressor, chorus, or room", () => {
+    expect(ampGraphPlan(getAmpTone("direct"))).toEqual({
+      direct: true,
+      compressor: false,
+      chorus: false,
+      reverb: false,
+    });
+    expect(ampGraphPlan(getAmpTone("clean"))).toEqual({
+      direct: false,
+      compressor: true,
+      chorus: false,
+      reverb: true,
+    });
+    expect(ampGraphPlan(getAmpTone("chorus")).chorus).toBe(true);
+    expect(ampGraphPlan(getAmpTone("crunch"))).toEqual({
+      direct: false,
+      compressor: false,
+      chorus: false,
+      reverb: true,
+    });
   });
 
   it("mutes the monitor when hearing is off", () => {

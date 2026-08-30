@@ -62,8 +62,8 @@ export function Setup({
           <h1>Connect your guitar</h1>
           <p className="lede">
             Built for USB interfaces like the Focusrite Scarlett 2i2. Plug the guitar into Input 1, pick that device here,
-            and the app listens on that channel for pitch and attacks. Pick an amp preset to hear the
-            guitar through your headphones or speakers.
+            and the app listens on that channel for pitch and attacks. Use <strong>Direct</strong> to hear
+            the guitar in time, or an amp preset if you want tone (that adds a little delay).
           </p>
         </div>
       </header>
@@ -124,6 +124,9 @@ export function Setup({
               Listening to <strong>{capture.label}</strong> · {channelLabel(capture.channel)} · {capture.sampleRate} Hz ·{" "}
               {capture.channelCount} ch
               {scarlettLive ? " · Scarlett 2i2 compatible" : ""}
+              {typeof capture.roundTripMs === "number"
+                ? ` · software hear ≈ ${capture.roundTripMs} ms`
+                : ""}
             </p>
           )}
           {error && <p className="error-text">{error}</p>}
@@ -152,12 +155,20 @@ export function Setup({
         <li>
           <h3>4. Hear your guitar</h3>
           <p>
-            Software amp presets turn the dry interface signal into an electric tone so you can hear
-            yourself while you play. Pitch detection stays on the dry input.
+            <strong>Direct</strong> is the tightest software path — dry guitar, no amp room or chorus.
+            Amp presets add tone but also delay. Pitch detection stays on the dry input. If the
+            Scarlett Direct Monitor button is on, turn <strong>Hear guitar</strong> off or you will
+            hear yourself twice.
           </p>
           <AmpPicker value={amp} onChange={onAmp} />
           {status !== "live" && (
-            <p className="empty">Enable input first, then pick a string — the preset should come through the speakers.</p>
+            <p className="empty">Enable input first, then pick a string — you should hear it through the speakers.</p>
+          )}
+          {status === "live" && amp.enabled && typeof capture?.roundTripMs === "number" && (
+            <p className="empty">
+              Software hear is about <strong>{capture.roundTripMs} ms</strong> behind the pick. For
+              zero delay, use Scarlett Direct Monitor and uncheck Hear guitar.
+            </p>
           )}
         </li>
         <li>

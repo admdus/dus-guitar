@@ -1,4 +1,4 @@
-export type AmpPresetId = "clean" | "chorus" | "crunch" | "blues" | "lead" | "metal" | "fuzz";
+export type AmpPresetId = "direct" | "clean" | "chorus" | "crunch" | "blues" | "lead" | "metal" | "fuzz";
 export type DriveCurve = "soft" | "hard" | "fuzz";
 
 export interface AmpTone {
@@ -36,6 +36,31 @@ export interface AmpPrefs {
 export const AMP_PREFS_KEY = "dus-guitar.amp";
 
 export const AMP_TONES: AmpTone[] = [
+  {
+    id: "direct",
+    name: "Direct",
+    tag: "low latency",
+    description: "Dry guitar, no amp or room — the closest the app can get to playing in time.",
+    preGain: 1,
+    highpass: 40,
+    compress: false,
+    compressThreshold: 0,
+    compressRatio: 1,
+    drive: 0.05,
+    curve: "soft",
+    postGain: 1,
+    bass: 0,
+    mid: 0,
+    midFreq: 800,
+    treble: 0,
+    presence: 0,
+    presenceFreq: 3000,
+    cabLowpass: 18000,
+    cabHighpass: 40,
+    chorus: 0,
+    reverb: 0,
+    output: 0.92,
+  },
   {
     id: "clean",
     name: "Clean Studio",
@@ -216,10 +241,30 @@ export const AMP_TONES: AmpTone[] = [
 const TONE_IDS = new Set<AmpPresetId>(AMP_TONES.map((tone) => tone.id));
 
 export const DEFAULT_AMP_PREFS: AmpPrefs = {
-  presetId: "clean",
-  volume: 0.62,
+  presetId: "direct",
+  volume: 0.7,
   enabled: true,
 };
+
+export interface AmpGraphPlan {
+  direct: boolean;
+  compressor: boolean;
+  chorus: boolean;
+  reverb: boolean;
+}
+
+/** Skip compressor lookahead, chorus delay, and convolution when they are not part of the tone. */
+export function ampGraphPlan(tone: AmpTone): AmpGraphPlan {
+  if (tone.id === "direct") {
+    return { direct: true, compressor: false, chorus: false, reverb: false };
+  }
+  return {
+    direct: false,
+    compressor: tone.compress,
+    chorus: tone.chorus > 0.01,
+    reverb: tone.reverb > 0.01,
+  };
+}
 
 export function isAmpPresetId(value: string): value is AmpPresetId {
   return TONE_IDS.has(value as AmpPresetId);

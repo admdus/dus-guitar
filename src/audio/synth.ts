@@ -1,12 +1,13 @@
 import { midiToFreq, noteMidi, STANDARD_TUNING, type Tuning } from "../engine/notes";
 import type { StringIndex } from "../types";
+import { OUTPUT_LATENCY_HINT_SEC } from "./latency";
 
 let shared: AudioContext | null = null;
 
 export function getAudioContext(): AudioContext {
   if (!shared || shared.state === "closed") {
     const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    shared = new Ctx();
+    shared = new Ctx({ latencyHint: OUTPUT_LATENCY_HINT_SEC });
   }
   return shared;
 }

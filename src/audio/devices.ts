@@ -4,6 +4,7 @@
  */
 
 import { hostPlatform, type HostPlatform } from "../platform";
+import { INPUT_LATENCY_HINT_SEC } from "./latency";
 
 export type InputKind = "scarlett" | "loopback" | "other";
 export type InputChannel = 0 | 1;
@@ -26,6 +27,8 @@ export interface CaptureInfo {
   channel: InputChannel;
   sampleRate: number;
   channelCount: number;
+  /** Measured software monitor delay when the browser reports it. */
+  roundTripMs?: number | null;
 }
 
 export const INPUT_PREFS_KEY = "dus-guitar.input";
@@ -103,7 +106,7 @@ export function buildConstraintAttempts(deviceId?: string): CaptureConstraints[]
         deviceId: { exact: deviceId },
         channelCount: { ideal: 2 },
         sampleRate: { ideal: 48000 },
-        latency: { ideal: 0.01 },
+        latency: { ideal: INPUT_LATENCY_HINT_SEC },
       },
       {
         ...off,
@@ -122,7 +125,7 @@ export function buildConstraintAttempts(deviceId?: string): CaptureConstraints[]
       ...off,
       channelCount: { ideal: 2 },
       sampleRate: { ideal: 48000 },
-      latency: { ideal: 0.01 },
+      latency: { ideal: INPUT_LATENCY_HINT_SEC },
     },
     { ...off, channelCount: { ideal: 2 } },
     { ...off },
@@ -177,8 +180,8 @@ export function setupHints(platform: HostPlatform = hostPlatform()) {
       ? "This endpoint is reporting one channel, so Input 1 is the guitar. That is normal for some Core Audio views of the 2i2."
       : "This endpoint is reporting one channel, so Input 1 is the guitar. That is normal for some WASAPI views of the 2i2.",
     monitorPath: mac
-      ? "Scarlett Direct Monitor is dry and instant. For amp tone, turn Direct Monitor off and pick a software preset — there is a little latency. The app still captures Input 1 over Core Audio."
-      : "Scarlett Direct Monitor is dry and instant. For amp tone, turn Direct Monitor off and pick a software preset — there is a little latency. The app still captures Input 1 over WASAPI.",
+      ? "Do not leave Scarlett Direct Monitor on while Hear guitar is on — you will hear a delayed second copy. Direct Monitor alone is instant and dry. For software tone, turn Direct Monitor off. The app still captures Input 1 over Core Audio."
+      : "Do not leave Scarlett Direct Monitor on while Hear guitar is on — you will hear a delayed second copy. Direct Monitor alone is instant and dry. For software tone, turn Direct Monitor off. The app still captures Input 1 over WASAPI.",
     exclusiveAccess: mac
       ? "Close Logic Pro, GarageBand, or other hosts that take exclusive access to the Scarlett, or macOS will refuse the input."
       : "Close Ableton, Reaper, or other hosts that hold the Focusrite ASIO driver, or Windows will refuse the input.",
