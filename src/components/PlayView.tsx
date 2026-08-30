@@ -8,7 +8,9 @@ import { getSong, saveHighScore } from "../data/songs";
 import { bestPositionForMidi } from "../engine/notes";
 import { songForTuning, type Tuning } from "../engine/tuning";
 import { click, pluckFret, resumeAudio } from "../audio/synth";
+import { hitsForStep, loadDrumKit, playDrumHits, saveDrumKit, type DrumKitId } from "../audio/drums";
 import { guitarInput } from "../audio/guitarInput";
+import { DrumPicker } from "./DrumPicker";
 import type { DetectedPitch, EngineSnapshot, StringIndex } from "../types";
 
 interface Props {
@@ -40,16 +42,19 @@ export function PlayView({
   const engineRef = useRef<SongEngine | null>(null);
   const snapRef = useRef<EngineSnapshot | null>(null);
   const detectedRef = useRef(detected);
-  const lastBeatRef = useRef(-99);
+  const lastStepRef = useRef(-99);
   const metronomeRef = useRef(true);
+  const drumKitRef = useRef<DrumKitId>("off");
   const savedRef = useRef(false);
   const [hud, setHud] = useState<EngineSnapshot | null>(null);
   const [speed, setSpeed] = useState(1);
   const [metronome, setMetronome] = useState(true);
+  const [drumKit, setDrumKit] = useState<DrumKitId>(loadDrumKit);
   const [spaceAssist, setSpaceAssist] = useState(!guitarLive);
 
   detectedRef.current = detected;
   metronomeRef.current = metronome;
+  drumKitRef.current = drumKit;
 
   useEffect(() => {
     if (!song) return;
@@ -58,7 +63,7 @@ export function PlayView({
     snapRef.current = engine.snapshot();
     setHud(engine.snapshot());
     savedRef.current = false;
-    lastBeatRef.current = -99;
+    lastStepRef.current = -99;
     setSpeed(1);
     let raf = 0;
     let lastHud = 0;
@@ -83,13 +88,16 @@ export function PlayView({
           ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
           drawFretboard(ctx, w, h, snap, detectedRef.current, song.bpm, tuning);
         }
-        if (metronomeRef.current && snap.playing) {
+        const kit = drumKitRef.current;
+        if ((metronomeRef.current || kit !== "off") && snap.playing) {
           const beatDur = 60 / song.bpm;
+          const stepDur = beatDur / 4;
           const timeline = snap.currentTime + beatDur * 4;
-          const beat = Math.floor(timeline / beatDur);
-          if (beat !== lastBeatRef.current && timeline >= 0) {
-            lastBeatRef.current = beat;
-            click(beat % 4 === 0);
+          const step = Math.floor(timeline / stepDur);
+          if (step !== lastStepRef.current && timeline >= 0) {
+            lastStepRef.current = step;
+            if (metronomeRef.current && step % 4 === 0) click(step % 16 === 0);
+            playDrumHits(hitsForStep(kit, step));
           }
         }
         if (now - lastHud > 80) {
@@ -155,7 +163,7 @@ export function PlayView({
   const pause = () => engineRef.current?.pause(performance.now());
   const restart = () => {
     savedRef.current = false;
-    lastBeatRef.current = -99;
+    lastStepRef.current = -99;
     engineRef.current?.reset();
     void start();
   };
@@ -167,6 +175,12 @@ export function PlayView({
     void resumeAudio();
     pluckFret(string, fret, 0.2, tuning);
     engineRef.current?.feedFret(string, fret, performance.now());
+  };
+  const changeDrums = (kit: DrumKitId) => {
+    setDrumKit(kit);
+    saveDrumKit(kit);
+    if (kit === "off") return;
+    void resumeAudio().then(() => playDrumHits(hitsForStep(kit, 0)));
   };
 
   const snap = hud ?? engineRef.current?.snapshot();
@@ -239,6 +253,7 @@ export function PlayView({
           <input type="checkbox" checked={metronome} onChange={(e) => setMetronome(e.target.checked)} />
           Click
         </label>
+        <DrumPicker value={drumKit} onChange={changeDrums} />
         <label className="check">
           <input type="checkbox" checked={spaceAssist} onChange={(e) => setSpaceAssist(e.target.checked)} />
           Space to hit
