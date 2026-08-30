@@ -564,7 +564,8 @@ html[data-platform="darwin"] .play-hud a {
 }
 .amp-card.on {
   border-color: var(--accent);
-  background: rgba(34, 211, 238, 0.08);
+  background: rgba(34, 211, 238, 0.14);
+  box-shadow: 0 0 0 1px var(--accent), 0 10px 24px rgba(34, 211, 238, 0.12);
 }
 .amp-card.on em { color: var(--accent); }
 .amp-mix {

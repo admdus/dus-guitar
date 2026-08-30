@@ -60,11 +60,12 @@ export function AmpPicker({ value, onChange, compact = false }: Props) {
             key={tone.id}
             type="button"
             className={["amp-card", value.enabled && value.presetId === tone.id ? "on" : ""].filter(Boolean).join(" ")}
+            aria-pressed={value.enabled && value.presetId === tone.id}
             onClick={() => setPreset(tone.id)}
           >
             <strong>
               {tone.name}
-              <em>{tone.tag}</em>
+              <em>{value.enabled && value.presetId === tone.id ? "on" : tone.tag}</em>
             </strong>
             <p>{tone.description}</p>
           </button>
