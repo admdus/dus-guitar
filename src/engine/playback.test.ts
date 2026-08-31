@@ -14,6 +14,8 @@ describe("song library", () => {
         expect(note.string).toBeGreaterThanOrEqual(1);
         expect(note.string).toBeLessThanOrEqual(6);
         expect(note.fret).toBeGreaterThanOrEqual(0);
+        expect(note.finger).toBeGreaterThanOrEqual(0);
+        expect(note.finger).toBeLessThanOrEqual(4);
         expect(noteMidi(note.string, note.fret)).toBeGreaterThanOrEqual(40);
       }
     }

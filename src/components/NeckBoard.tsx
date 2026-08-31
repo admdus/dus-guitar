@@ -1,3 +1,4 @@
+import { FINGER_LABELS, fingerColor } from "../engine/fingers";
 import { STRING_COLORS } from "../engine/notes";
 import type { Tuning } from "../engine/tuning";
 import type { LiveNote, StringIndex } from "../types";
@@ -46,13 +47,16 @@ export function NeckBoard({ notes, currentTime, tuning, highlight, onPlayFret }:
                   : DOTS.includes(fret)
                     ? "•"
                     : "";
+              const cellColor = match ? fingerColor(match.finger, s) : STRING_COLORS[s];
+              const fingerName =
+                match && match.finger !== undefined && match.finger !== 0 ? `, ${FINGER_LABELS[match.finger]} finger` : match?.finger === 0 ? ", open" : "";
               return (
                 <button
                   key={fret}
                   className={`fret-cell ${isUpcoming ? "upcoming" : ""} ${isNow ? "now" : ""} ${isHeard ? "heard" : ""} ${fret === 0 ? "open" : ""} ${mark ? "legato" : ""}`}
-                  style={{ ["--s" as string]: STRING_COLORS[s] }}
+                  style={{ ["--s" as string]: cellColor }}
                   onClick={() => onPlayFret(s, fret)}
-                  aria-label={`${tuning.stringNames[s]} string fret ${fret}${match?.technique === "hammer" ? " hammer-on" : match?.technique === "pull" ? " pull-off" : ""}`}
+                  aria-label={`${tuning.stringNames[s]} string fret ${fret}${fingerName}${match?.technique === "hammer" ? " hammer-on" : match?.technique === "pull" ? " pull-off" : ""}`}
                 >
                   {label}
                 </button>

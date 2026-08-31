@@ -14,7 +14,7 @@ export function Learn({ onPlay, scores }: Props) {
           <p className="eyebrow">Path</p>
           <h1>Learn the fretboard</h1>
           <p className="lede">
-            Follow the path from open strings to pentatonic licks, whole-neck scale etudes, metal hammer-ons, arpeggio sweeps, and sweep picking. Each step is a real play-along with the scrolling neck.
+            Follow the path from open strings to pentatonic licks, whole-neck scale etudes, metal hammer-ons, arpeggio sweeps, and sweep picking. Each step is a real play-along with the scrolling neck. Note color tells you which left-hand finger to use.
           </p>
         </div>
       </header>

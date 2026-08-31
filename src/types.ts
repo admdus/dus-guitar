@@ -5,6 +5,8 @@ export type SongCategory = "beginner" | "rock" | "folk" | "exercise" | "classica
 export type Judge = "perfect" | "great" | "good" | "miss";
 export type NoteStatus = "pending" | Judge;
 export type Technique = "hammer" | "pull";
+/** Left-hand finger. 0 is an open string (no finger). */
+export type Finger = 0 | 1 | 2 | 3 | 4;
 
 export interface SongNote {
   id: number;
@@ -15,6 +17,8 @@ export interface SongNote {
   chordGroup?: number;
   /** Hammer-on or pull-off — scored from a pitch change, not a pick attack. */
   technique?: Technique;
+  /** Which left-hand finger to use. 0 = open string. */
+  finger?: Finger;
 }
 
 export interface SongCover {

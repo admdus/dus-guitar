@@ -110,8 +110,23 @@ describe("import helpers", () => {
     expect(song.imported).toBe(true);
     expect(song.notes).toHaveLength(2);
     expect(song.notes[1].fret).toBe(3);
+    expect(song.notes[0].finger).toBe(0);
+    expect(song.notes[1].finger).toBe(1);
     expect(song.id.startsWith("import-")).toBe(true);
     expect(parseSongJson(song).title).toBe("JSON Riff");
+  });
+
+  it("keeps an explicit finger from song JSON", () => {
+    const song = parseSongJson({
+      title: "Fingered",
+      bpm: 100,
+      notes: [
+        { time: 0, duration: 0.4, string: 6, fret: 5, finger: 4 },
+        { time: 0.5, duration: 0.4, string: 6, fret: 7 },
+      ],
+    });
+    expect(song.notes[0].finger).toBe(4);
+    expect(song.notes[1].finger).toBe(3);
   });
 
   it("rejects empty JSON", () => {

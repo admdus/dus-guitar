@@ -1,4 +1,5 @@
 import type { Song, SongNote, StringIndex, TuningId } from "../types";
+import { assignFingers } from "./fingers";
 
 export interface Tuning {
   id: TuningId;
@@ -57,7 +58,8 @@ function remapNote(note: SongNote, from: Tuning, to: Tuning): SongNote {
       `Cannot retune string ${note.string} fret ${note.fret} from ${from.id} to ${to.id}`,
     );
   }
-  return fret === note.fret ? note : { ...note, fret };
+  if (fret === note.fret) return note;
+  return { ...note, fret, finger: undefined };
 }
 
 /**
@@ -70,7 +72,7 @@ export function songForTuning(song: Song, tuning: Tuning): Song {
   if (from.id === tuning.id) return song;
   return {
     ...song,
-    notes: song.notes.map((note) => remapNote(note, from, tuning)),
+    notes: assignFingers(song.notes.map((note) => remapNote(note, from, tuning)), true),
   };
 }
 

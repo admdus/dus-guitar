@@ -1,5 +1,6 @@
 import { detectPitchYin, isOnset, rmsAmplitude } from "../audio/pitch";
 import type { Difficulty, Song, SongCover, SongNote, StringIndex, Technique } from "../types";
+import { assignFingers, isFinger } from "./fingers";
 import { freqToMidi, preferPlayablePosition } from "./notes";
 import { fromBeats, songDuration, techniqueFromFrets, type TabEvent } from "./tab";
 import { STANDARD_TUNING } from "./tuning";
@@ -148,6 +149,7 @@ export function parseSongJson(raw: unknown): Song {
       fret,
       ...(chordGroup !== undefined ? { chordGroup } : {}),
       ...(technique ? { technique } : {}),
+      ...(isFinger(note.finger) ? { finger: note.finger } : {}),
     };
     return parsed;
   });
@@ -170,7 +172,7 @@ export function parseSongJson(raw: unknown): Song {
         : descriptionFor(typeof data.sourceName === "string" ? data.sourceName : undefined, notes.length, data.bpm),
     duration: typeof data.duration === "number" && data.duration > 0 ? data.duration : songDuration(notes),
     cover,
-    notes,
+    notes: assignFingers(notes),
     imported: true,
     sourceName: typeof data.sourceName === "string" ? data.sourceName : undefined,
     tuning: data.tuning === "drop-d" ? "drop-d" : "standard",

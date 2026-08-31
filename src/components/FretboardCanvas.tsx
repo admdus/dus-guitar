@@ -1,3 +1,4 @@
+import { fingerColor } from "../engine/fingers";
 import { STRING_COLORS, bestPositionForMidi } from "../engine/notes";
 import { isLegato } from "../engine/tab";
 import { STANDARD_TUNING, type Tuning } from "../engine/tuning";
@@ -201,7 +202,7 @@ function drawNote(
           ? "#facc15"
           : note.status === "miss"
             ? "#fb7185"
-            : STRING_COLORS[note.string];
+            : fingerColor(note.finger, note.string);
 
   ctx.globalAlpha = note.status === "miss" ? 0.35 : note.status === "pending" ? 1 : 0.55;
   ctx.fillStyle = color;
