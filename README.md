@@ -58,8 +58,8 @@ npm run dist:win
 2. Open **Guitar** in the sidebar and choose that input (not Loopback). Pick a string — the meter should jump and a note name should appear.
 3. Pick an **amp preset** (Clean Studio, Crunch, Metal Core, …) so you can hear the guitar through headphones or speakers. Turn Scarlett **Direct Monitor** off if you do not want a dry double of the same signal.
 4. Use **Tuner** so each open string is in tune. Pick **Standard** (E A D G B e) or **Drop D** (D A D G B e) to match the guitar. Drop D rewrites every song so it still sounds the same: low-string notes move up 2 frets, and power chords become one-finger shapes.
-5. Pick a song. After a 4-beat count-in, notes slide toward the cyan **PLAY** line.
-6. Fret and pick the matching note when it arrives. The bouncing ball marks the current string. Hits light up; misses fade red.
+5. Pick a song. After a 4-beat count-in, notes slide toward the cyan **PLAY** line. **Note color is the left-hand finger**: silver open string, green index, red middle, gold ring, blue pinky. The number on the note is still the fret.
+6. Fret and pick the matching note when it arrives, using the finger that matches the color. The bouncing ball marks the current string. Hits light up; misses fade red.
 7. The neck at the bottom shows which frets are coming up. Click it to play a note if you are practicing without a guitar.
 
 Drag the **Speed** slider from 10% to 100% to slow a song down while you learn it. Turn **Click** on for a metronome, or pick **Drums** (Kick, Rock, Pop, Metal, Shuffle) for a backing groove. Switch **Amp** on the play bar to change tone mid-song. **Space to hit** scores the current note from the keyboard so you can learn the rhythm first.

@@ -12,6 +12,7 @@ import { hitsForStep, loadDrumKit, playDrumHits, saveDrumKit, type DrumKitId } f
 import { guitarInput } from "../audio/guitarInput";
 import { DrumPicker } from "./DrumPicker";
 import { AmpPicker } from "./AmpPicker";
+import { FingerLegend } from "./FingerLegend";
 import { getAmpTone, type AmpPrefs } from "../audio/ampPresets";
 import type { DetectedPitch, EngineSnapshot, StringIndex } from "../types";
 
@@ -295,6 +296,8 @@ export function PlayView({
         )}
       </div>
 
+      <FingerLegend />
+
       <div className="fret-stage">
         <canvas ref={canvasRef} />
       </div>
@@ -325,7 +328,7 @@ export function PlayView({
       {!guitarLive && (
         <p className="practice-hint">
           No guitar connected. Click the highlighted frets on the neck, or enable <b>Space to hit</b> to practice
-          timing.
+          timing. Note color is the left-hand finger.
           {song.notes.some((n) => n.technique) ? (
             <>
               {" "}

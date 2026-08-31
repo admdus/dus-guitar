@@ -1,4 +1,5 @@
-import type { SongNote, StringIndex, Technique } from "../types";
+import type { Finger, SongNote, StringIndex, Technique } from "../types";
+import { assignFingers } from "./fingers";
 
 export type BeatTuple = [
   beat: number,
@@ -15,6 +16,7 @@ export interface TabEvent {
   duration?: number;
   chordGroup?: number;
   technique?: Technique;
+  finger?: Finger;
 }
 
 export type BeatEvent = BeatTuple | TabEvent;
@@ -39,7 +41,7 @@ export function asTabEvent(event: BeatEvent): TabEvent {
 
 export function fromBeats(bpm: number, events: BeatEvent[]): SongNote[] {
   const beatDur = 60 / bpm;
-  return events.map((raw, id) => {
+  const notes = events.map((raw, id) => {
     const event = asTabEvent(raw);
     const s = event.string as StringIndex;
     if (s < 1 || s > 6) {
@@ -56,8 +58,10 @@ export function fromBeats(bpm: number, events: BeatEvent[]): SongNote[] {
       fret: event.fret,
       ...(event.chordGroup !== undefined ? { chordGroup: event.chordGroup } : {}),
       ...(event.technique ? { technique: event.technique } : {}),
+      ...(event.finger !== undefined ? { finger: event.finger } : {}),
     };
   });
+  return assignFingers(notes);
 }
 
 export function songDuration(notes: SongNote[]): number {
